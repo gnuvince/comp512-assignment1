@@ -1,0 +1,51 @@
+<html>
+<head>
+   <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+   <meta name="GENERATOR" content="Mozilla/4.75C-CCK-MCD {C-UDP; EBM-APPLE} (Macintosh; U; PPC) [Netscape]">
+   <title>Project Start</title>
+</head>
+<body text="#000000" bgcolor="#FFFFFF">
+<p></p>
+<h3>The following is a description of the different steps you have to perform to start the existing project code</h3>
+<p>Two distinct hosts are involved:</p>
+<ul>
+<li>The server host - machine on which the remote server and its registry are running</li>
+<li>The client host - machine on which the client is running</li>
+</ul>
+<p>The server consists of two packages</p>
+<ul>
+<li>The interface package ResInterface. It only contains the interface file ResourceManager.</li>
+<li>The implementation package ResImpl. It only contains the implementation of the Resource Manager</li>
+</ul>
+<p>You should be able to use all the lab machines (labx-xxx) and the servers willy, skinner, mimi and linux for your project.</p>
+<p><b>The RMI Registry:</b> We have started rmiregistries on willy, skinner, and mimi. You can use those machines for your server program. <br /> <br /> <br /> <b>Creating a Server:</b></p>
+<ul>
+<li>Go to any of your directories, e.g., <tt>$HOME_of_ProjectPartner1/somewhere/</tt>and copy servercode.tar into the directory. Enter the directory</li>
+<li>Untar servercode.tar: <tt> tar -xvf servercode.tar </tt> <br /> The directory will have a subdirectory <tt> servercode </tt> containing the two subdirectories for the two packages above and file <tt> java.policy </tt>(the java.policy file is only needed if you use the old version of RMI).</li>
+<li><tt> cd servercode </tt> (The following commands have to be called while being in directory <tt>$HOME_of_ProjectParnter1/somewhere/servercode</tt>.</li>
+<li>The directory ResInterface contains the Interface file. The directory ResImpl contains an implementation. Please edit ResImpl/ResourceManagerImpl.java: change in <br /> <tt> registry.rebind("MyGroupResourceManager", rm);</tt> the "MyGroup" to your group name. <br />You can also change it to anything that will make it unique. Otherwise, if two or more of you run the server at the same time on the same machine you will override each other's implementations.</li>
+<li>Make sure that the current directory is included in the CLASSPATH. Something like the following might (or might not) work: <br /> <tt>setenv CLASSPATH $HOME_of_ProjectParnter1/somewhere/servercode</tt></li>
+<li>Compile the Interface package and generate a jar.file :: <br /> <tt> javac ResInterface/ResourceManager.java</tt> <br /> <tt>jar cvf ResInterface.jar ResInterface/*.class</tt></li>
+<li>Compile the Impl package (no jar-file needed): <br /> <tt>javac ResImpl/ResourceManagerImpl.java</tt></li>
+<li>Be sure the class and jar files are world readable and the directories along the path $HOME_of_ProjectParnter1/somewhere/servercode are world executable. The rmiregistry and the client will get the proxy files from this directory.</li>
+<li>Start running the server on a machine on which a rmiregistry is running <br />
+<pre>&nbsp;&nbsp; java -Djava.rmi.server.codebase=file:$HOME_of_ProjectPartner1/somewhere/servercode/ ResImpl.ResourceManagerImpl </pre>
+If you get an exception at this point, it means that you have a problem with paths or executable names.</li>
+</ul>
+<p><b>Setting up a Client:</b>We provide you with the implementation of an interactive client (thanks to Beibei Zou, Chenliang Sun and Nomair Naeem).</p>
+<ul>
+<ul>
+<li>Untar the clientsrc.tar, e.g. in the directory <tt>$HOME_of_Partner2/somewhere/</tt>.</li>
+The directory will contain a subdirecotry clientsrc with a client.java file and a policy file (the policy file only needed for the older version of RMI). The current example does not use a package for the client. If you want to use packages for the client the package name must be the same as the directory-name the file is located in. The directory also contains a</ul>
+</ul>
+<p><tt> userGuide.pdf </tt></p>
+<ul>with information of how to use the client.
+<li>Edit the file client.java. Change in <br /> <tt> ResourceManager rm = (ResourceManager) registry.lookup("MyGroupResourceManager");</tt> <br />the "MyGroup" to your group name.</li>
+<li>In order for the client to compile it needs the Interface Spec. Copy the ResInterface.jar from <tt>$HOME_of_Partner1/somewhere/</tt> into <tt>$HOME_of_Partner2/somewhereelse/</tt> (e.g, <tt>$HOME_of_Partner2/somewhere/clientsrc</tt>-- in order to pretend to be truly distributed, don't use the Partner1 directories)</li>
+<li>Set classpaths correctly, maybe with something like <br /> <tt> setenv CLASSPATH $HOME_of_Partner2/somewhere/clientsrc:$HOME_of_Partner2/somewhereelse/ResInterface.jar </tt></li>
+<li>Compile the client: <tt> javac client.java </tt> </li>
+<li>Run the client code on a different machine than the server. <br /> <tt> java client servermachine </tt> <br /> <tt> servermachine </tt> should indicate the machine the server is running on. For example, if you run the server on mimi and the client on lab2-3, then replace <tt>servermachine</tt> above with <tt>mimi</tt>. If you run the client on the same machine as the server, you can omit the servermachine parameter.</li>
+</ul>
+<p>Did it work? Congratulations. Now you are ready for the "real" stuff.</p>
+</body>
+</html>
