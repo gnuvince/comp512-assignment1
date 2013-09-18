@@ -1,5 +1,3 @@
-grant codeBase "file:PUT-THE-RIGHT-PATH-HERE" {
+grant codeBase "file:/home/vince/Dropbox/universite/A13/comp512/assignment1/clientsrc" {
     permission java.security.AllPermission;
 };
-
-

@@ -40,7 +40,7 @@ public class ResourceManagerImpl implements ResourceManager {
 
             // Bind the remote object's stub in the registry
             Registry registry = LocateRegistry.getRegistry();
-            registry.rebind("MyGroupResourceManager", rm);
+            registry.rebind("Group5_ResourceManager", rm);
 
             System.err.println("Server ready");
         } 
