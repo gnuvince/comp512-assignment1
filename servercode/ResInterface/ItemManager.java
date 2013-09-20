@@ -2,7 +2,7 @@ package ResInterface;
 
 import java.rmi.RemoteException;
 
-import ResImpl.Customer;
+import ResImpl.ReservedItem;
 
 public interface ItemManager {
     /**
@@ -62,6 +62,6 @@ public interface ItemManager {
      * @return true if reservation is successful, false otherwise
      * @throws RemoteException
      */
-    public boolean reserveRoom(int id, Customer customer, String itemId) 
+    public ReservedItem reserveRoom(int id, String customerId, String itemId) 
         throws RemoteException; 
 }

@@ -16,7 +16,7 @@ public class HotelManager implements ItemManager {
             // If hotel doesn't exist, create it and add it to 
             // the manager's hash table.
             Hotel newObj = new Hotel(itemId, quantity, price);
-            putHotel(id, newObj.getKey(), newObj);
+            putHotel(id, newObj.getKey(), "need customer id");
         }
         else {
             // If the hotel already exists, update its quantity (by adding
@@ -26,7 +26,7 @@ public class HotelManager implements ItemManager {
             if (price > 0) {
                 curObj.setPrice(price);
             }
-            putHotel(id, curObj.getKey(), curObj);
+            putHotel(id, itemId, "need customer id");
         }
         return true;
     }
@@ -68,26 +68,27 @@ public class HotelManager implements ItemManager {
 
    
     @Override
-    public boolean reserveRoom(int id, Customer customer, String itemId)
+    public ReservedItem reserveRoom(int id, String customerId, String itemId)
         throws RemoteException {
         Hotel curObj = fetchHotel(id, itemId);
         if (curObj == null) {
-            return false;
+            return null;
         }
         else if (curObj.getCount() == 0) {
-            return false;
+            return null;
         }
         else {
             // ?????
             String key = Hotel.getKey(itemId);
-            customer.reserve(key, itemId, curObj.getPrice());
-            putHotel(id, customer.getKey(), customer);
+            //customer.reserve(key, itemId, curObj.getPrice());
+            putHotel(id, itemId, customerId);
 
             // decrease the number of available items in the storage
             curObj.setCount(curObj.getCount() - 1);
             curObj.setReserved(curObj.getReserved() + 1);
 
-            return true;
+            
+            return new ReservedItem(key, curObj.getLocation(), 1, curObj.getPrice());
         }
     }
     
@@ -97,9 +98,9 @@ public class HotelManager implements ItemManager {
         }
     }
     
-    private void putHotel(int id, String itemId, RMItem value) {
+    private void putHotel(int id, String itemId, String customerId) {
         synchronized (roomsTable) {
-            roomsTable.put(itemId, value);
+            roomsTable.put(itemId, customerId);
         }
     }
     
