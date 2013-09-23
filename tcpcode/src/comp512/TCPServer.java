@@ -1,19 +1,12 @@
 package comp512;
 
-import java.io.BufferedReader;
-import java.io.BufferedWriter;
-import java.io.DataOutputStream;
 import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
-import java.io.OutputStream;
-import java.io.OutputStreamWriter;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
@@ -30,9 +23,11 @@ class HostPort {
 
 public class TCPServer {
     private Map<String, HostPort> backends;
+    private ExecutorService executor;
     
     public TCPServer() {
         backends = new HashMap<String, HostPort>();
+        executor = Executors.newFixedThreadPool(16);
     }
     
     public static void main(String[] args) {
@@ -41,18 +36,17 @@ public class TCPServer {
             System.exit(1);
         }
         
-        TCPServer obj = new TCPServer();
-        obj.populateBackends(args);
+        TCPServer server = new TCPServer();
+        server.populateBackends(args);
+        ServerSocket serverSocket;
         
-        ExecutorService executor = Executors.newFixedThreadPool(16);
-        ServerSocket server;
         try {
-            server = new ServerSocket(5566);
+            serverSocket = new ServerSocket(5566);
             while (true) {
                 // Accept connection from a new client
                 final Socket connection;
                 try {
-                    connection = server.accept();
+                    connection = serverSocket.accept();
                     System.out.println("Connection from "
                         + connection.getRemoteSocketAddress());
                 }
@@ -62,12 +56,31 @@ public class TCPServer {
                     continue;
                 }
 
-                System.out.println(connection.isClosed());
                 ArrayList<String> msg = (ArrayList<String>)Comm.recvObject(connection);
-                System.out.println(connection.isClosed());
                 System.out.println(msg);
-                Comm.sendObject(connection, new Boolean(msg.get(0).charAt(0) == 'n'));
-                connection.close();
+
+                final Future<Result> resultFuture = server.executor.submit(new BackendDispatcher(msg, server.backends));
+                server.executor.execute(new Runnable() {
+                    @Override
+                    public void run() {
+                        Result result;
+                        try {
+                            result = resultFuture.get();
+                            if (result.boolResult != null)
+                                Comm.sendObject(connection, result.boolResult);
+                            connection.close();
+                        }
+                        catch (InterruptedException e) {
+                            e.printStackTrace();
+                        }
+                        catch (ExecutionException e) {
+                            e.printStackTrace();
+                        }
+                        catch (IOException e) {
+                            e.printStackTrace();
+                        }
+                    }
+                });
             }
         }
         catch (IOException e) {
@@ -90,4 +103,5 @@ public class TCPServer {
                 new HostPort(hostPort[0], Integer.parseInt(hostPort[1])));
         }
     }
+    
 }

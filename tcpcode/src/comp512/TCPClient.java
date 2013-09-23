@@ -2,10 +2,7 @@ package comp512;
 
 import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
 import java.net.Socket;
 import java.util.ArrayList;
 import java.util.StringTokenizer;
@@ -31,6 +28,9 @@ public class TCPClient {
                 }
                 else if (msg.get(0).equalsIgnoreCase("help")) {
                     help(msg);
+                }
+                else if (msg.get(0).equalsIgnoreCase("quit")) {
+                    System.exit(0);
                 }
                 else {
                     Socket socket = new Socket("localhost", 5566);
