@@ -6,7 +6,7 @@ policy:
 compileserver: policy
 	javac -cp . ResInterface/ResourceManager.java
 	jar cvf ResInterface.jar ResInterface/*.class
-	javac -cp . ResImpl/*.java
+	javac -g -cp . ResImpl/*.java
 
 runserver: compileserver
 	java -cp . -Djava.security.policy=./java.policy -Djava.rmi.server.codebase=file:$(CURDIR) ResImpl.ResourceManagerImpl

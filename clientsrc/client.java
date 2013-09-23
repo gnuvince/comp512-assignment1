@@ -42,7 +42,7 @@ public class client
 	    try
 		{
 		    // get a reference to the rmiregistry
-		    Registry registry = LocateRegistry.getRegistry(server);
+		    Registry registry = LocateRegistry.getRegistry(server, 5005);
 		    // get the proxy and the remote reference by rmiregistry lookup
 		    rm = (ResourceManager) registry.lookup("Group5_ResourceManager");
 		    if(rm!=null)

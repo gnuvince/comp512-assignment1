@@ -1,10 +1,11 @@
 package ResInterface;
 
+import java.rmi.Remote;
 import java.rmi.RemoteException;
 
 import ResImpl.ReservedItem;
 
-public interface ItemManager {
+public interface ItemManager extends Remote  {
     /**
      * Add an item to the manager's hash table.
      * @param id unused
@@ -62,6 +63,18 @@ public interface ItemManager {
      * @return true if reservation is successful, false otherwise
      * @throws RemoteException
      */
-    public ReservedItem reserveRoom(int id, String customerId, String itemId) 
+    public ReservedItem reserveItem(int id, String customerId, String itemId) 
         throws RemoteException; 
+    
+    /**     
+     * Cancel a reservation
+     * - item quantity is adjusted in hash table
+     * @param id unused
+     * @param itemId the item being cancelled
+     * @param count the number of item being cancelled
+     * @return true if cancellation is successful, false otherwise
+     * @throws RemoteException
+     */
+    public boolean cancelItem(int id, String itemId, int count)
+    		throws RemoteException; 
 }

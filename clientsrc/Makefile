@@ -7,7 +7,7 @@ compileclient: policy
 	javac -cp .:ResInterface.jar client.java
 
 runclient: compileclient
-	java -Djava.security.policy=./java.policy -Djava.rmi.server.codebase=file:$(CURDIR) -cp .:ResInterface.jar client localhost
+	java -Djava.security.policy=./java.policy -Djava.rmi.server.codebase=file:$(CURDIR) -cp .:ResInterface.jar client teaching.cs.mcgill.ca
 
 clean:
 	rm -f client.class

@@ -18,10 +18,15 @@ import java.rmi.server.UnicastRemoteObject;
 public class ResourceManagerImpl implements ResourceManager {
 
     protected RMHashtable m_itemHT = new RMHashtable();
+    
+    protected ItemManager rmHotel = null;
+    /*static ItemManager rmFlight = null;
+    static ItemManager rmCars = null;*/
 
     public static void main(String args[]) {
         // Figure out where server is running
         String server = "localhost";
+        int port = 5005;
 
         if (args.length == 1) {
             server = server + ":" + args[0];
@@ -39,7 +44,7 @@ public class ResourceManagerImpl implements ResourceManager {
             ResourceManager rm = (ResourceManager) UnicastRemoteObject.exportObject(obj, 0);
 
             // Bind the remote object's stub in the registry
-            Registry registry = LocateRegistry.getRegistry();
+            Registry registry = LocateRegistry.getRegistry(port);
             registry.rebind("Group5_ResourceManager", rm);
 
             System.err.println("Server ready");
@@ -49,7 +54,7 @@ public class ResourceManagerImpl implements ResourceManager {
             System.err.println("Server exception: " + e.toString());
             e.printStackTrace();
         }
-
+        
         // Create and install a security manager
         if (System.getSecurityManager() == null) {
             System.setSecurityManager(new RMISecurityManager());
@@ -57,6 +62,34 @@ public class ResourceManagerImpl implements ResourceManager {
     }
 
     public ResourceManagerImpl() throws RemoteException {
+    	initRMs();
+    }
+    
+   //Establish connection with every resource manager
+    private void initRMs() {
+    	String hotelServer = "lab7-21.cs.mcgill.ca";
+    	/*String flightServer = "";
+    	String carServer = "";*/
+    	
+    	try {
+    		// get a reference to the rmiregistry on Hotel's server
+		    Registry registry = LocateRegistry.getRegistry(hotelServer, 5005);
+		    // get the proxy and the remote reference by rmiregistry lookup
+		    rmHotel = (ItemManager) registry.lookup("Group5_HotelManager");
+		    if(rmHotel!=null)
+			{
+			    System.out.println("Successfully connected to the Hotel Manager");			    
+			}
+		    else
+			{
+			    System.out.println("Connection to the Hotel Manager failed");
+			}		    
+	    }
+	    catch (Exception e)
+		{
+		    System.err.println("Hotel exception: " + e.toString());
+		    e.printStackTrace();
+		}
     }
 
     // Reads a data item
@@ -173,6 +206,19 @@ public class ResourceManagerImpl implements ResourceManager {
             return true;
         }
     }
+    
+    protected Customer getCustomer(int customerID){
+    	// Read customer object if it exists (and read lock it)
+        Customer cust = (Customer) readData(0, Customer.getKey(customerID));
+        
+        return cust;        
+    }
+    
+    protected boolean finalizeReservation(int id, int customerID, String key, String location ) {
+    	
+    	
+    	return false;
+    }
 
     // Create a new flight, or add seats to existing flight
     // NOTE: if flightPrice <= 0 and the flight already exists, it maintains its
@@ -215,6 +261,11 @@ public class ResourceManagerImpl implements ResourceManager {
         throws RemoteException {
         Trace.info("RM::addRooms(" + id + ", " + location + ", " + count
             + ", $" + price + ") called");
+        
+        //Call HotelManager
+        boolean result = rmHotel.addItem(id, location, count, price);
+        
+        /*
         Hotel curObj = (Hotel) readData(id, Hotel.getKey(location));
         if (curObj == null) {
             // doesn't exist...add it
@@ -234,13 +285,18 @@ public class ResourceManagerImpl implements ResourceManager {
                 + location + ", count=" + curObj.getCount() + ", price=$"
                 + price);
         } // else
-        return (true);
+        return (true);*/
+        
+        return result;
     }
 
     // Delete rooms from a location
     public boolean deleteRooms(int id, String location) throws RemoteException {
-        return deleteItem(id, Hotel.getKey(location));
-
+    	Trace.info("RM::deleteRoom(" + id + ", " + location + ")");
+    	
+    	return rmHotel.deleteItem(id, location);
+    	
+        //return deleteItem(id, Hotel.getKey(location));
     }
 
     // Create a new car location or add cars to an existing location
@@ -305,12 +361,16 @@ public class ResourceManagerImpl implements ResourceManager {
 
     // Returns the number of rooms available at a location
     public int queryRooms(int id, String location) throws RemoteException {
-        return queryNum(id, Hotel.getKey(location));
+    	
+    	return rmHotel.queryItemQuantity(id, location);
+        //return queryNum(id, Hotel.getKey(location));
     }
 
     // Returns room price at this location
     public int queryRoomsPrice(int id, String location) throws RemoteException {
-        return queryPrice(id, Hotel.getKey(location));
+    	
+    	return rmHotel.queryItemPrice(id, location);
+        //return queryPrice(id, Hotel.getKey(location));
     }
 
     // Returns the number of cars available at a location
@@ -418,15 +478,16 @@ public class ResourceManagerImpl implements ResourceManager {
                 Trace.info("RM::deleteCustomer(" + id + ", " + customerID
                     + ") has reserved " + reserveditem.getKey() + " "
                     + reserveditem.getCount() + " times");
-                ReservableItem item = (ReservableItem) readData(id,
-                    reserveditem.getKey());
-                Trace.info("RM::deleteCustomer(" + id + ", " + customerID
-                    + ") has reserved " + reserveditem.getKey()
-                    + "which is reserved" + item.getReserved()
-                    + " times and is still available " + item.getCount()
-                    + " times");
-                item.setReserved(item.getReserved() - reserveditem.getCount());
-                item.setCount(item.getCount() + reserveditem.getCount());
+                
+                
+                //TODO: Parse the reservedItem                 
+                System.out.println("Cancelling reservation: " + reserveditem.getKey());
+                
+                //Free resources in RM
+                rmHotel.cancelItem(id, reserveditem.getKey(), reserveditem.getCount());
+                //rmFlight.cancelItem(...);
+                //rmCar.cancelItem(...);
+                
             }
 
             // remove the customer from the storage
@@ -469,7 +530,21 @@ public class ResourceManagerImpl implements ResourceManager {
     // Adds room reservation to this customer.
     public boolean reserveRoom(int id, int customerID, String location)
         throws RemoteException {
-        return reserveItem(id, customerID, Hotel.getKey(location), location);
+    	
+    	Customer cust = getCustomer(customerID);    	
+    	if (cust == null) {    		
+    		Trace.warn("Customer " + customerID + " doesn't exist");
+    		return false;
+    	}
+    	
+    	ReservedItem reservedItem = rmHotel.reserveItem(id, cust.getKey()/* ? */, location); 
+    	if (reservedItem != null) {
+    		cust.reserve(reservedItem.getKey(), reservedItem.getLocation(), reservedItem.getPrice());
+    		
+    		return true;
+    	}
+    		
+    	return false;    	
     }
 
     // Adds flight reservation to this customer.
