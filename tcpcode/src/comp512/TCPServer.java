@@ -1,11 +1,14 @@
 package comp512;
 
 import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
+import java.io.OutputStream;
+import java.io.OutputStreamWriter;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.ArrayList;
@@ -61,6 +64,7 @@ public class TCPServer {
 
                 ArrayList<String> msg = obj.readMessage(connection);
                 System.out.println(msg);
+                obj.sendResponse(connection, msg.get(0).charAt(0)== 'n' ? 1 : 0);
             }
         }
         catch (IOException e) {
@@ -108,14 +112,11 @@ public class TCPServer {
     }
     
     
-    public void sendResponse(Socket connection, Boolean b) {
+    public void sendResponse(Socket connection, int ok) {
         try {
-            ObjectOutputStream clientOutput = new ObjectOutputStream(
-                connection.getOutputStream()
-                );
-            clientOutput.writeObject(b);
-            clientOutput.flush();
-            clientOutput.close();
+            OutputStream os = connection.getOutputStream();
+            os.write(ok);
+            os.close();
         }
         catch (IOException e) {
             System.err.println(e.toString());

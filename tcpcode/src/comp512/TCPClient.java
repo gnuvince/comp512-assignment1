@@ -2,6 +2,7 @@ package comp512;
 
 import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
@@ -34,12 +35,12 @@ public class TCPClient {
                 else {
                     Socket socket = new Socket("localhost", 5566);
                     ObjectOutputStream oos = new ObjectOutputStream(socket.getOutputStream());
+                    InputStream ois = socket.getInputStream();
                     
                     try {
                         oos.writeObject(msg);
-                        //Boolean success = (Boolean)ois.readObject();
-                        Boolean success = true;
-                        if (success) {
+                        int success = ois.read();
+                        if (success == 1) {
                             System.out.println("Command execution succeeded.");
                         }
                         else {
@@ -51,6 +52,7 @@ public class TCPClient {
                         e.printStackTrace();
                     }
                     
+                    ois.close();
                     oos.close();
                     socket.close();
                 }
