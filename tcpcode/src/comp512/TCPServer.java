@@ -62,12 +62,16 @@ public class TCPServer {
                     continue;
                 }
 
-                ArrayList<String> msg = obj.readMessage(connection);
+                System.out.println(connection.isClosed());
+                ArrayList<String> msg = (ArrayList<String>)Comm.recvObject(connection);
+                System.out.println(connection.isClosed());
                 System.out.println(msg);
-                obj.sendResponse(connection, msg.get(0).charAt(0)== 'n' ? 1 : 0);
+                Comm.sendObject(connection, new Boolean(msg.get(0).charAt(0) == 'n'));
+                connection.close();
             }
         }
         catch (IOException e) {
+            System.err.println(e.getMessage());
             System.err.println("Cannot create a new socket on port 5566.");
             System.exit(1);
         }
@@ -84,42 +88,6 @@ public class TCPServer {
             String[] hostPort = keyValue[1].split(":");
             backends.put(keyValue[0], 
                 new HostPort(hostPort[0], Integer.parseInt(hostPort[1])));
-        }
-    }
-    
-    
-    /**
-     * Read an ArrayList<String> from a client connection.
-     * @param connection The client connection.
-     * @return The array list if successful, null otherwise.
-     */
-    public ArrayList<String> readMessage(Socket connection) {
-        try {
-            ObjectInputStream clientInput = new ObjectInputStream(
-                connection.getInputStream()
-                );
-            ArrayList<String> msg = (ArrayList<String>)clientInput.readObject();
-            return msg;
-        }
-        catch (ClassNotFoundException e) {
-            System.err.println(e.toString());
-            return null;
-        }
-        catch (IOException e) {
-            System.err.println(e.toString());
-            return null;
-        }
-    }
-    
-    
-    public void sendResponse(Socket connection, int ok) {
-        try {
-            OutputStream os = connection.getOutputStream();
-            os.write(ok);
-            os.close();
-        }
-        catch (IOException e) {
-            System.err.println(e.toString());
         }
     }
 }

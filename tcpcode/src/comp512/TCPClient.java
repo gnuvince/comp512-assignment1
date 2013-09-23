@@ -34,26 +34,21 @@ public class TCPClient {
                 }
                 else {
                     Socket socket = new Socket("localhost", 5566);
-                    ObjectOutputStream oos = new ObjectOutputStream(socket.getOutputStream());
-                    InputStream ois = socket.getInputStream();
                     
                     try {
-                        oos.writeObject(msg);
-                        int success = ois.read();
-                        if (success == 1) {
-                            System.out.println("Command execution succeeded.");
+                        Comm.sendObject(socket, msg);
+                        Boolean b = (Boolean)Comm.recvObject(socket);
+                        if (b) {
+                            System.out.println("Success");
                         }
                         else {
-                            System.out.println("Command execution failed.");
+                            System.out.println("Failure");
                         }
                     }
                     catch (Exception e) {
                         // TODO Auto-generated catch block
                         e.printStackTrace();
                     }
-                    
-                    ois.close();
-                    oos.close();
                     socket.close();
                 }
             }
@@ -68,6 +63,9 @@ public class TCPClient {
         }
 
     }
+    
+    
+ 
 
     public static ArrayList<String> parse(String command) {
         ArrayList<String> arguments = new ArrayList<String>();
