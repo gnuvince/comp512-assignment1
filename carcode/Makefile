@@ -3,13 +3,13 @@ policy:
 	@echo "    permission java.security.AllPermission;" >> java.policy
 	@echo "};" >> java.policy
 
-compileserver: policy
-	javac -cp . ResInterface/ResourceManager.java
+compilecar: policy
+	javac -cp . ResInterface/ItemManager.java
 	jar cvf ResInterface.jar ResInterface/*.class
-	javac -g -cp . ResImpl/*.java
+	javac -cp . ResImpl/*.java
 
-runserver: compileserver
-	java -cp . -Djava.security.policy=./java.policy -Djava.rmi.server.codebase=file:$(CURDIR) ResImpl.ResourceManagerImpl
+runcar: compilecar
+	java -cp . -Djava.security.policy=./java.policy -Djava.rmi.server.codebase=file:$(CURDIR) ResImpl.CarManagerImpl
 
 clean:
 	rm -f ResImpl/*.class

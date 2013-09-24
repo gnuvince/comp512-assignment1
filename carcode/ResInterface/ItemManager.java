@@ -5,7 +5,7 @@ import java.rmi.RemoteException;
 
 import ResImpl.ReservedItem;
 
-public interface ItemManager extends Remote  {
+public interface ItemManager extends Remote {
     /**
      * Add an item to the manager's hash table.
      * @param id unused

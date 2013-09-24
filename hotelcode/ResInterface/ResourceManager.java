@@ -124,7 +124,7 @@ public interface ResourceManager extends Remote
 	throws RemoteException; 
 
     /* reserve a room certain at this location */
-    public boolean reserveRoom(int id, int customer, String location) 
+    public boolean reserveRoom(int id, int customer, String locationd) 
 	throws RemoteException; 
 
 
