@@ -21,22 +21,22 @@ class HostPort {
     }
 }
 
-public class TCPServer {
+public class TCPMiddleWare {
     private Map<String, HostPort> backends;
     private ExecutorService executor;
     
-    public TCPServer() {
+    public TCPMiddleWare() {
         backends = new HashMap<String, HostPort>();
         executor = Executors.newFixedThreadPool(16);
     }
     
     public static void main(String[] args) {
         if (args.length != 3) {
-            System.err.println("Usage: TCPServer car=<host>:<port> flight=<host>:<port> hotel=<host>:<port>");
+            System.err.println("Usage: TCPMiddleWare car=<host>:<port> flight=<host>:<port> hotel=<host>:<port>");
             System.exit(1);
         }
         
-        TCPServer server = new TCPServer();
+        TCPMiddleWare server = new TCPMiddleWare();
         server.populateBackends(args);
         ServerSocket serverSocket;
         
