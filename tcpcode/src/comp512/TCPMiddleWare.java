@@ -23,11 +23,9 @@ class HostPort {
 
 public class TCPMiddleWare {
     private Map<String, HostPort> backends;
-    private ExecutorService executor;
     
     public TCPMiddleWare() {
         backends = new HashMap<String, HostPort>();
-        executor = Executors.newFixedThreadPool(16);
     }
     
     public static void main(String[] args) {
@@ -36,6 +34,7 @@ public class TCPMiddleWare {
             System.exit(1);
         }
         
+        ExecutorService executor = Executors.newFixedThreadPool(16);
         TCPMiddleWare server = new TCPMiddleWare();
         server.populateBackends(args);
         ServerSocket serverSocket;
@@ -59,15 +58,22 @@ public class TCPMiddleWare {
                 ArrayList<String> msg = (ArrayList<String>)Comm.recvObject(connection);
                 System.out.println(msg);
 
-                final Future<Result> resultFuture = server.executor.submit(new BackendDispatcher(msg, server.backends));
-                server.executor.execute(new Runnable() {
+                // The following steps happen here:
+                // 1. An asynchronous request is send to the dispatcher.
+                // 2. While the dispatcher is doing its work, a new asynchronous
+                //    task is started that'll wait for the result of the dispatcher
+                //    and then send the result back to the client.
+                // 3. While these two threads are running, the middleware listens
+                //    for new connections.
+                final Future<Result> resultFuture = executor.submit(
+                    new BackendDispatcher(msg, server.backends));
+                executor.execute(new Runnable() {
                     @Override
                     public void run() {
                         Result result;
                         try {
                             result = resultFuture.get();
-                            if (result.boolResult != null)
-                                Comm.sendObject(connection, result.boolResult);
+                            Comm.sendObject(connection, result);
                             connection.close();
                         }
                         catch (InterruptedException e) {

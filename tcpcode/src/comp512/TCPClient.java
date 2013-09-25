@@ -26,23 +26,35 @@ public class TCPClient {
                 if (msg.isEmpty()) {
                     continue;
                 }
+                
+                // Help and quit commands are not passed to the server.
                 else if (msg.get(0).equalsIgnoreCase("help")) {
                     help(msg);
                 }
                 else if (msg.get(0).equalsIgnoreCase("quit")) {
                     System.exit(0);
                 }
+                
+                // For all other commands, a connection to the middleware
+                // is established, the complete command + arguments sent over
+                // the wire and we wait for a result object.
                 else {
                     Socket socket = new Socket("localhost", 5566);
                     
                     try {
                         Comm.sendObject(socket, msg);
-                        Boolean b = (Boolean)Comm.recvObject(socket);
-                        if (b) {
-                            System.out.println("Success");
+                        Result b = (Result)Comm.recvObject(socket);
+                        if (b.boolResult != null) {
+                            System.out.println(b.boolResult ? "OK" : "Failure");
                         }
-                        else {
-                            System.out.println("Failure");
+                        else if (b.intResult != null) {
+                            System.out.println(b.intResult);
+                        }
+                        else if (b.reservationResult != null) {
+                            System.out.println("Reservation successful");
+                        }
+                        else if (b.reservationResult == null) {
+                            System.out.println("Reservation failed");
                         }
                     }
                     catch (Exception e) {
