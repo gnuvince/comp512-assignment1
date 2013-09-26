@@ -29,8 +29,9 @@ public class TCPMiddleWare {
     }
     
     public static void main(String[] args) {
-        if (args.length != 3) {
-            System.err.println("Usage: TCPMiddleWare car=<host>:<port> flight=<host>:<port> hotel=<host>:<port>");
+        if (args.length != 4) {
+            System.err.println("Usage: comp512.TCPMiddleWare car=<host>:<port> " +
+            		"flight=<host>:<port> hotel=<host>:<port> customer=<host>:<port>");
             System.exit(1);
         }
         
@@ -73,13 +74,6 @@ public class TCPMiddleWare {
                         Result result;
                         try {
                             result = resultFuture.get();
-                            
-                            // We got a result back from a reservation command,
-                            // we now need to send it to the Customer backend.
-                            if (result.reservationResult != null) {
-                                
-                            }
-                            
                             Comm.sendObject(connection, result);
                             connection.close();
                         }

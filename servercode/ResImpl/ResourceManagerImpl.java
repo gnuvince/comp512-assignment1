@@ -62,7 +62,7 @@ public class ResourceManagerImpl implements ResourceManager {
     }
 
     public ResourceManagerImpl() throws RemoteException {
-    	initRMs();
+    	//initRMs();
     }
     
    //Establish connection with every resource manager

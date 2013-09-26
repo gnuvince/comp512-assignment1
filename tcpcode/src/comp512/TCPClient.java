@@ -4,6 +4,7 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.Socket;
+import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.StringTokenizer;
 
@@ -53,6 +54,9 @@ public class TCPClient {
                         else if (b.reservationResult != null) {
                             System.out.println("Reservation successful");
                         }
+                        else if (b.stringResult != null) {
+                            System.out.println(b.stringResult);
+                        }
                         else if (b.reservationResult == null) {
                             System.out.println("Reservation failed");
                         }
@@ -76,8 +80,7 @@ public class TCPClient {
 
     }
     
-    
- 
+  
 
     public static ArrayList<String> parse(String command) {
         ArrayList<String> arguments = new ArrayList<String>();
