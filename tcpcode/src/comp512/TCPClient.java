@@ -316,7 +316,7 @@ public class TCPClient {
             add("quit");
             add("newcustomerid");
         }};
-        return commands.indexOf(command);
+        return commands.indexOf(command)+1;
     }
 
 }

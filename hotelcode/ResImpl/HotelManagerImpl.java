@@ -1,10 +1,17 @@
 package ResImpl;
 
+import java.io.IOException;
+import java.net.ServerSocket;
+import java.net.Socket;
 import java.rmi.RMISecurityManager;
 import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
 import java.rmi.server.UnicastRemoteObject;
+import java.util.ArrayList;
+
+import comp512.Comm;
+import comp512.Result;
 
 import ResInterface.ItemManager;
 import ResInterface.ResourceManager;
@@ -17,19 +24,24 @@ public class HotelManagerImpl implements ItemManager {
         // Figure out where server is running
         String server = "localhost";
         int port = 5005;
+        HotelManagerImpl obj = new HotelManagerImpl();
 
-        if (args.length == 1) {
-            server = server + ":" + args[0];
-        } else if (args.length != 0 &&  args.length != 1) {
-            System.err.println ("Wrong usage");
-            System.out.println("Usage: java ResImpl.HotelManagerImpl [port]");
+        if (args.length == 0) {
+            System.err.println("Usage: java ResImpl.HotelManagerImpl <rmi|tcp> [<port>]");
             System.exit(1);
+        }
+        else if (args.length >= 1 && args[0].equals("tcp")) {
+            obj.tcpServer(args.length >= 2 ? Integer.parseInt(args[1]) : port);
+            System.exit(0);
+        }
+        else if (args.length >= 1 && args[0].equals("rmi")) {
+            if (args.length >= 2)
+                server = server + ":" + args[0];
         }
 
         try 
         {
             // create a new Server object
-        	HotelManagerImpl obj = new HotelManagerImpl();
             // dynamically generate the stub (client proxy)
             ItemManager rm = (ItemManager) UnicastRemoteObject.exportObject(obj, 0);
 
@@ -50,6 +62,72 @@ public class HotelManagerImpl implements ItemManager {
             System.setSecurityManager(new RMISecurityManager());
         }
     }
+    
+    
+    
+    
+    public void tcpServer(int port) {
+        try {
+            ServerSocket server = new ServerSocket(port);
+            while (true) {
+                Socket connection = server.accept();
+                System.out.println("Accepting connection: " + connection.toString());
+                Result res = new Result();
+                
+                try {
+                    ArrayList<String> msg = (ArrayList<String>) Comm.recvObject(connection);
+
+                    if (msg.get(0).equalsIgnoreCase("newroom")) {
+                        res.boolResult = 
+                            this.addItem(
+                                Integer.parseInt(msg.get(1)), 
+                                msg.get(2), 
+                                Integer.parseInt(msg.get(3)), 
+                                Integer.parseInt(msg.get(4)));
+                    }
+                    else if (msg.get(0).equalsIgnoreCase("deleteroom")) {
+                        res.boolResult = 
+                            this.deleteItem(
+                                Integer.parseInt(msg.get(1)), 
+                                msg.get(2)); 
+                    }
+                    else if (msg.get(0).equalsIgnoreCase("queryroom")) {
+                        res.intResult =
+                            this.queryItemQuantity(
+                                Integer.parseInt(msg.get(1)), 
+                                msg.get(2)); 
+                    }
+                    else if (msg.get(0).equalsIgnoreCase("queryroomprice")) {
+                        res.intResult =
+                            this.queryItemPrice(
+                                Integer.parseInt(msg.get(1)), 
+                                msg.get(2)); 
+                    }
+                    else if (msg.get(0).equalsIgnoreCase("reserveroom")) {
+                        res.reservationResult = 
+                            this.reserveItem(
+                                Integer.parseInt(msg.get(1)), 
+                                msg.get(2),
+                                msg.get(3));
+                    }
+                    else {
+                        res.boolResult = false;
+                    }
+
+                    Comm.sendObject(connection, res);
+                    connection.close();
+                }
+                catch (NumberFormatException e) {
+                    res.boolResult = false;
+                    Comm.sendObject(connection, res);
+                }
+            }
+        }
+        catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
 
     @Override
     public boolean addItem(int id, String location, int quantity, int price)

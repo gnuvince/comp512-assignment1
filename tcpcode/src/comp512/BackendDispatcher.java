@@ -26,9 +26,9 @@ public class BackendDispatcher implements Callable<Result> {
             
         }
         else if (cmd.contains("car")) {
-            hp = this.backends.get("flight");
+            hp = this.backends.get("car");
         }
-        else if (cmd.contains("hotel")) {
+        else if (cmd.contains("room")) {
             hp = this.backends.get("hotel");
 
         }

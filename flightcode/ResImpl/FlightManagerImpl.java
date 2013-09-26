@@ -26,14 +26,6 @@ public class FlightManagerImpl implements ItemManager {
         String server = "localhost";
         int port = 5007;
 
-//        if (args.length == 1) {
-//            server = server + ":" + args[0];
-//        } else if (args.length != 0 &&  args.length != 1) {
-//            System.err.println ("Wrong usage");
-//            System.out.println("Usage: java ResImpl.FlightManagerImpl [port]");
-//            System.exit(1);
-//        }
-//        
         FlightManagerImpl obj = new FlightManagerImpl();
         if (args.length == 0) {
             System.err.println("Usage: java ResImpl.FlightManagerImpl <rmi|tcp> [<port>]");
@@ -78,48 +70,55 @@ public class FlightManagerImpl implements ItemManager {
             while (true) {
                 Socket connection = server.accept();
                 System.out.println("Accepting connection: " + connection.toString());
-                ArrayList<String> msg = (ArrayList<String>) Comm.recvObject(connection);
                 Result res = new Result();
+                
+                try {
+                    ArrayList<String> msg = (ArrayList<String>) Comm.recvObject(connection);
 
-                if (msg.get(0).equalsIgnoreCase("newflight")) {
-                    res.boolResult = 
-                        this.addItem(
-                            Integer.parseInt(msg.get(1)), 
-                            msg.get(2), 
-                            Integer.parseInt(msg.get(3)), 
-                            Integer.parseInt(msg.get(4)));
+                    if (msg.get(0).equalsIgnoreCase("newflight")) {
+                        res.boolResult = 
+                            this.addItem(
+                                Integer.parseInt(msg.get(1)), 
+                                msg.get(2), 
+                                Integer.parseInt(msg.get(3)), 
+                                Integer.parseInt(msg.get(4)));
+                    }
+                    else if (msg.get(0).equalsIgnoreCase("deleteflight")) {
+                        res.boolResult = 
+                            this.deleteItem(
+                                Integer.parseInt(msg.get(1)), 
+                                msg.get(2)); 
+                    }
+                    else if (msg.get(0).equalsIgnoreCase("queryflight")) {
+                        res.intResult =
+                            this.queryItemQuantity(
+                                Integer.parseInt(msg.get(1)), 
+                                msg.get(2)); 
+                    }
+                    else if (msg.get(0).equalsIgnoreCase("queryflightprice")) {
+                        res.intResult =
+                            this.queryItemPrice(
+                                Integer.parseInt(msg.get(1)), 
+                                msg.get(2)); 
+                    }
+                    else if (msg.get(0).equalsIgnoreCase("reserveflight")) {
+                        res.reservationResult = 
+                            this.reserveItem(
+                                Integer.parseInt(msg.get(1)), 
+                                msg.get(2),
+                                msg.get(3));
+                    }
+                    else {
+                        res.boolResult = false;
+                    }
+
+                    Comm.sendObject(connection, res);
+                    connection.close();
                 }
-                else if (msg.get(0).equalsIgnoreCase("deleteflight")) {
-                    res.boolResult = 
-                        this.deleteItem(
-                            Integer.parseInt(msg.get(1)), 
-                            msg.get(2)); 
-                }
-                else if (msg.get(0).equalsIgnoreCase("queryflight")) {
-                    res.intResult =
-                        this.queryItemQuantity(
-                            Integer.parseInt(msg.get(1)), 
-                            msg.get(2)); 
-                }
-                else if (msg.get(0).equalsIgnoreCase("queryflightprice")) {
-                    res.intResult =
-                        this.queryItemPrice(
-                            Integer.parseInt(msg.get(1)), 
-                            msg.get(2)); 
-                }
-                else if (msg.get(0).equalsIgnoreCase("reserveflight")) {
-                    res.reservationResult = 
-                        this.reserveItem(
-                            Integer.parseInt(msg.get(1)), 
-                            msg.get(2),
-                            msg.get(3));
-                }
-                else {
+                catch (NumberFormatException e) {
                     res.boolResult = false;
+                    Comm.sendObject(connection, res);
                 }
-                    
-                Comm.sendObject(connection, res);
-                connection.close();
             }
         }
         catch (IOException e) {
