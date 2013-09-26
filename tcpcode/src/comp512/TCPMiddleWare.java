@@ -73,6 +73,13 @@ public class TCPMiddleWare {
                         Result result;
                         try {
                             result = resultFuture.get();
+                            
+                            // We got a result back from a reservation command,
+                            // we now need to send it to the Customer backend.
+                            if (result.reservationResult != null) {
+                                
+                            }
+                            
                             Comm.sendObject(connection, result);
                             connection.close();
                         }

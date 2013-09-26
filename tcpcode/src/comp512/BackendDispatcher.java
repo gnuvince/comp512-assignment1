@@ -37,6 +37,7 @@ public class BackendDispatcher implements Callable<Result> {
 
         }
         else if (cmd.contains("itinerary")) {
+            // TODO: send reserve requests to all backends.
             return null;
         }
         
