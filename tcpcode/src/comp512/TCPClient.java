@@ -10,7 +10,14 @@ import java.util.StringTokenizer;
 
 public class TCPClient {
     public static void main(String[] args) {
-        String serverHost = args.length == 1 ? args[0] : "localhost";
+        if (args.length != 2) {
+            System.err.println("Usage: TCPClient hostname port");
+            System.exit(1);
+        }
+            
+        String serverHost = args[0];
+        int serverPort = Integer.parseInt(args[1]);
+        
         BufferedReader stdin = new BufferedReader(new InputStreamReader(
             System.in));
 
@@ -40,7 +47,7 @@ public class TCPClient {
                 // is established, the complete command + arguments sent over
                 // the wire and we wait for a result object.
                 else {
-                    Socket socket = new Socket("localhost", 5566);
+                    Socket socket = new Socket(serverHost, serverPort);
                     
                     try {
                         Comm.sendObject(socket, msg);

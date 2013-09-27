@@ -29,19 +29,20 @@ public class TCPMiddleWare {
     }
     
     public static void main(String[] args) {
-        if (args.length != 4) {
-            System.err.println("Usage: comp512.TCPMiddleWare car=<host>:<port> " +
+        if (args.length != 5) {
+            System.err.println("Usage: comp512.TCPMiddleWare <port> car=<host>:<port> " +
             		"flight=<host>:<port> hotel=<host>:<port> customer=<host>:<port>");
             System.exit(1);
         }
         
         ExecutorService executor = Executors.newFixedThreadPool(16);
         TCPMiddleWare server = new TCPMiddleWare();
+        int port = Integer.parseInt(args[0]);
         server.populateBackends(args);
         ServerSocket serverSocket;
         
         try {
-            serverSocket = new ServerSocket(5566);
+            serverSocket = new ServerSocket(port);
             while (true) {
                 // Accept connection from a new client
                 final Socket connection;
@@ -103,7 +104,8 @@ public class TCPMiddleWare {
      * @param args array of mappings of the form: backend=host:port
      */
     public void populateBackends(String[] args) {
-        for (String arg: args) {
+        for (int i = 1; i < args.length; ++i) {
+            String arg = args[i];
             String[] keyValue = arg.split("=");
             String[] hostPort = keyValue[1].split(":");
             backends.put(keyValue[0], 
