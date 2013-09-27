@@ -3,6 +3,8 @@
 import sys
 import os
 
+CLASS_PATH = "carcode/bin:flightcode/bin:hotelcode/bin:servercode/bin:tcpcode/bin:customercode/bin"
+
 def usage():
     print "Usage: %s <tcp|rmi> <port> <component> [<extra args>]" % sys.argv[0]
     print "Components:"
@@ -29,11 +31,11 @@ def get_component(arg):
 def launch_component(component, protocol, port, extra_args):
     if protocol == "tcp":
         if component == "middleware":
-            os.system("java -cp carcode/bin:flightcode/bin:hotelcode/bin:servercode/bin:tcpcode/bin:customercode/bin comp512.TCPMiddleWare %d %s" % (port, extra_args))
+            os.system("java -cp %s comp512.TCPMiddleWare %d %s" % (CLASS_PATH, port, extra_args))
         elif component == "client":
-            os.system("java -cp carcode/bin:flightcode/bin:hotelcode/bin:servercode/bin:tcpcode/bin:customercode/bin comp512.TCPClient %s %d" % (extra_args, port))
+            os.system("java -cp %s comp512.TCPClient %s %d" % (CLASS_PATH, extra_args, port))
         else:
-            os.system("java -cp carcode/bin:flightcode/bin:hotelcode/bin:servercode/bin:tcpcode/bin:customercode/bin ResImpl.%sManagerImpl tcp %d" % (component.capitalize(), port))
+            os.system("java -cp %s ResImpl.%sManagerImpl tcp %d" % (CLASS_PATH, component.capitalize(), port))
 
 
 def main():

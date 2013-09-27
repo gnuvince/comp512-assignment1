@@ -9,6 +9,8 @@ import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
 import java.rmi.server.UnicastRemoteObject;
 import java.util.ArrayList;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 import comp512.Comm;
 import comp512.Result;
@@ -31,8 +33,14 @@ public class HotelManagerImpl implements ItemManager {
             System.exit(1);
         }
         else if (args.length >= 1 && args[0].equals("tcp")) {
-            obj.tcpServer(args.length >= 2 ? Integer.parseInt(args[1]) : port);
-            System.exit(0);
+            try {
+                obj.tcpServer(args.length >= 2 ? Integer.parseInt(args[1]) : port);
+                System.exit(0);
+            }
+            catch (IOException e) {
+                System.err.println(e.getMessage());
+                System.exit(1);
+            }
         }
         else if (args.length >= 1 && args[0].equals("rmi")) {
             if (args.length >= 2)
@@ -66,65 +74,75 @@ public class HotelManagerImpl implements ItemManager {
     
     
     
-    public void tcpServer(int port) {
-        try {
-            ServerSocket server = new ServerSocket(port);
-            while (true) {
-                Socket connection = server.accept();
-                System.out.println("Accepting connection: " + connection.toString());
-                Result res = new Result();
-                
-                try {
-                    ArrayList<String> msg = (ArrayList<String>) Comm.recvObject(connection);
+    public void tcpServer(int port) throws IOException {
+        ServerSocket server = new ServerSocket(port);
+        ExecutorService executor = Executors.newFixedThreadPool(16);
+        
+        while (true) {
+            final Socket connection = server.accept();
+            final HotelManagerImpl copy = this;
+            System.out.println("Accepting connection: " + connection.toString());
+            
+            executor.execute(new Runnable() {
+                public void run() {
+                    Result res = new Result();
 
-                    if (msg.get(0).equalsIgnoreCase("newroom")) {
-                        res.boolResult = 
-                            this.addItem(
-                                Integer.parseInt(msg.get(1)), 
-                                msg.get(2), 
-                                Integer.parseInt(msg.get(3)), 
-                                Integer.parseInt(msg.get(4)));
+                    try {
+                        ArrayList<String> msg = (ArrayList<String>) Comm.recvObject(connection);
+
+                        if (msg.get(0).equalsIgnoreCase("newroom")) {
+                            res.boolResult = 
+                                copy.addItem(
+                                    Integer.parseInt(msg.get(1)), 
+                                    msg.get(2), 
+                                    Integer.parseInt(msg.get(3)), 
+                                    Integer.parseInt(msg.get(4)));
+                        }
+                        else if (msg.get(0).equalsIgnoreCase("deleteroom")) {
+                            res.boolResult = 
+                                copy.deleteItem(
+                                    Integer.parseInt(msg.get(1)), 
+                                    msg.get(2)); 
+                        }
+                        else if (msg.get(0).equalsIgnoreCase("queryroom")) {
+                            res.intResult =
+                                copy.queryItemQuantity(
+                                    Integer.parseInt(msg.get(1)), 
+                                    msg.get(2)); 
+                        }
+                        else if (msg.get(0).equalsIgnoreCase("queryroomprice")) {
+                            res.intResult =
+                                copy.queryItemPrice(
+                                    Integer.parseInt(msg.get(1)), 
+                                    msg.get(2)); 
+                        }
+                        else if (msg.get(0).equalsIgnoreCase("reserveroom")) {
+                            res.reservationResult = 
+                                copy.reserveItem(
+                                    Integer.parseInt(msg.get(1)), 
+                                    msg.get(2),
+                                    msg.get(3));
+                        }
+                        else {
+                            res.boolResult = false;
+                        }
+
+                        Comm.sendObject(connection, res);
+                        connection.close();
                     }
-                    else if (msg.get(0).equalsIgnoreCase("deleteroom")) {
-                        res.boolResult = 
-                            this.deleteItem(
-                                Integer.parseInt(msg.get(1)), 
-                                msg.get(2)); 
-                    }
-                    else if (msg.get(0).equalsIgnoreCase("queryroom")) {
-                        res.intResult =
-                            this.queryItemQuantity(
-                                Integer.parseInt(msg.get(1)), 
-                                msg.get(2)); 
-                    }
-                    else if (msg.get(0).equalsIgnoreCase("queryroomprice")) {
-                        res.intResult =
-                            this.queryItemPrice(
-                                Integer.parseInt(msg.get(1)), 
-                                msg.get(2)); 
-                    }
-                    else if (msg.get(0).equalsIgnoreCase("reserveroom")) {
-                        res.reservationResult = 
-                            this.reserveItem(
-                                Integer.parseInt(msg.get(1)), 
-                                msg.get(2),
-                                msg.get(3));
-                    }
-                    else {
+                    catch (NumberFormatException e) {
                         res.boolResult = false;
+                        Comm.sendObject(connection, res);
                     }
-
-                    Comm.sendObject(connection, res);
-                    connection.close();
+                    catch (RemoteException e) {
+                        res.boolResult = false;
+                        Comm.sendObject(connection, res);
+                    }
+                    catch (IOException e) {
+                        e.printStackTrace();
+                    }
                 }
-                catch (NumberFormatException e) {
-                    res.boolResult = false;
-                    Comm.sendObject(connection, res);
-                }
-            }
-        }
-        catch (IOException e) {
-            e.printStackTrace();
+            });
         }
     }
 
