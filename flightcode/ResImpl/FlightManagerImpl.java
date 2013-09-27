@@ -16,8 +16,8 @@ import java.util.concurrent.Executors;
 
 import comp512.Comm;
 import comp512.Result;
+import ResInterface.*;
 
-import ResInterface.ItemManager;
 
 public class FlightManagerImpl implements ItemManager {
     

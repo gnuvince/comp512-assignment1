@@ -14,9 +14,7 @@ import java.util.concurrent.Executors;
 
 import comp512.Comm;
 import comp512.Result;
-
-import ResInterface.ItemManager;
-import ResInterface.ResourceManager;
+import ResInterface.*;
 
 public class HotelManagerImpl implements ItemManager {
     

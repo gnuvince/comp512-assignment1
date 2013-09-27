@@ -10,6 +10,7 @@ import java.util.concurrent.Executors;
 
 import comp512.Comm;
 import comp512.Result;
+import ResInterface.*;
 
 // This backend reuses the methods inside ResourceManagerImpl.
 
