@@ -13,7 +13,7 @@ def usage():
     print "\tcar"
     print "\tflight"
     print "\thotel"
-    print "\tcustomer"
+    print "\tcustomer middleware:port"
 
 def get_protocol(arg):
     if arg in ["tcp", "rmi"]:
@@ -34,6 +34,8 @@ def launch_component(component, protocol, port, extra_args):
             os.system("java -cp %s comp512.TCPMiddleWare %d %s" % (CLASS_PATH, port, extra_args))
         elif component == "client":
             os.system("java -cp %s comp512.TCPClient %s %d" % (CLASS_PATH, extra_args, port))
+        elif component == "customer":
+            os.system("java -cp %s ResImpl.CustomerManagerImpl tcp %d %s" % (CLASS_PATH, port, extra_args))
         else:
             os.system("java -cp %s ResImpl.%sManagerImpl tcp %d" % (CLASS_PATH, component.capitalize(), port))
 

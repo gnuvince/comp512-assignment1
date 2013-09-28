@@ -117,6 +117,13 @@ public class CarManagerImpl implements ItemManager {
                                     msg.get(2),
                                     msg.get(3));
                         }
+                        else if (msg.get(0).equalsIgnoreCase("cancelcar")) {
+                            res.boolResult = 
+                                copy.cancelItem(
+                                    Integer.parseInt(msg.get(1)), 
+                                    msg.get(2),
+                                    Integer.parseInt(msg.get(3)));
+                        }
                         else {
                             res.boolResult = false;
                         }

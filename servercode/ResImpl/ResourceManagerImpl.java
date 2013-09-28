@@ -62,12 +62,12 @@ public class ResourceManagerImpl implements ResourceManager {
     }
 
     public ResourceManagerImpl() throws RemoteException {
-    	//initRMs();
+    	initRMs();
     }
     
    //Establish connection with every resource manager
     private void initRMs() {
-    	String hotelServer = "lab7-21.cs.mcgill.ca";
+    	String hotelServer = "localhost";
     	/*String flightServer = "";
     	String carServer = "";*/
     	
