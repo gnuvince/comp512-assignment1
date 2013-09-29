@@ -192,6 +192,7 @@ public class CustomerManagerImpl {
         }
         else {
             RMHashtable reservations = cust.getReservations();
+            deleteCustomer(sessionId, cust.getKey());
             for (Enumeration e = reservations.keys(); e.hasMoreElements();) {
                 String reservedkey = (String) (e.nextElement());
                 ReservedItem reserveditem = cust.getReservedItem(reservedkey);
@@ -223,7 +224,6 @@ public class CustomerManagerImpl {
                 }
                 
             }
-            deleteCustomer(sessionId, cust.getKey());
             Trace.info("RM::deleteCustomer(" + sessionId + ", " + customerId
                 + ") succeeded");
             return true;
