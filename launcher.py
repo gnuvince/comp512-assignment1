@@ -3,10 +3,16 @@
 import sys
 import os
 
+if sys.version_info.major != 2:
+    print("The launcher requires Python version 2")
+    sys.exit(1)
+
+
+
 CLASS_PATH = "carcode/bin:flightcode/bin:hotelcode/bin:servercode/bin:tcpcode/bin:customercode/bin"
 
 def usage():
-    print "Usage: %s <tcp|rmi> <port> <component> [<extra args>]" % sys.argv[0]
+    print "Usage: %s <component> <tcp|rmi> <port> [<extra args>]" % sys.argv[0]
     print "Components:"
     print "\tmiddleware car=host:port flight=host:port hotel=host:port customer=host:port"
     print "\tclient middleware-host"
@@ -45,9 +51,9 @@ def main():
         usage()
         sys.exit(1)
 
-    protocol = get_protocol(sys.argv[1])
-    port = get_port(sys.argv[2])
-    component = get_component(sys.argv[3])
+    component = get_component(sys.argv[1])
+    protocol = get_protocol(sys.argv[2])
+    port = get_port(sys.argv[3])
     extra_args = " ".join(sys.argv[4:])
 
     launch_component(component, protocol, port, extra_args)

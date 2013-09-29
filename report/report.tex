@@ -20,11 +20,69 @@
 
 \maketitle
 
+\section{Compilation and execution}
+
+The whole system can easily be built with a single command:
+
+
+\begin{verbatim}
+$ make
+\end{verbatim}
+
+Running {\it make} in the root folder of the project will compile
+all the different compononents of the project (middleware, client,
+resource managers).
+
+The different components can be started by using the helper {\it
+  launcher.py} script in the root folder of the project.  The basic
+syntax of the script is as follows:
+
+
+\begin{verbatim}
+./launcher.py <component> <tcp|rmi> <port> <extra args>
+\end{verbatim}
+
+The component is any of:
+
+\begin{itemize}
+\item middleware
+\item client
+\item customer
+\item car
+\item flight
+\item hotel
+\end{itemize}
+
+You can select if you want the component to use the TCP protocol or
+the RMI protocol.  Note that you cannot mix-and-match components of
+different protocols (e.g. a TCP client cannot communicate with a RMI
+middleware).
+
+The port parameter lets you select on which port the middleware and
+resource managers should listen on.  For the client, the port
+parameter is the port of the middleware that it should connect to.
+
+Finally, you can specify extra arguments to be passed to the
+component.  Thw following components require extra arguments:
+
+\begin{itemize}
+\item client: requires the hostname of the middleware
+\item customer: requires the hostname and port of the middleware.  The
+  syntax is {\it host:port}.
+\item middleware: requires the hostnames and ports of all resource
+  managers.  The syntax is {\it backend=host:port}.  For example,
+  specifying the customer resource manager location is done with {\it
+    customer=localhost:9000}.
+\end{itemize}
+
+
+
 
 \section{TCP}
 
 This section describes in some details the architecture and
 implementation details of the TCP implementation of the system.
+
 
 \subsection{Compononents}
 
