@@ -3,7 +3,7 @@
 \usepackage{times}
 \usepackage[utf8]{inputenc}
 \usepackage[T1]{fontenc}
-\usepackage[french]{babel}
+\usepackage[english]{babel}
 \usepackage{amssymb}
 \usepackage{parskip}
 \usepackage{url}
@@ -99,13 +99,12 @@ The system is split into 6 distinct components:
 
 The middleware is the central hub of all inter-component
 communication; at no point do the client or any manager directly
-communicate with each other.
+communicate with each other (see Figure \ref{fig:tcp}).
 
 
 \begin{figure}[h]
   \begin{center}
-    \label{fig:tcp}
-    \caption{Architecture of TCP system}
+    \caption{Architecture of TCP system \label{fig:tcp} }
     \includegraphics[scale=0.4]{tcp-diagram.pdf}
   \end{center}
 \end{figure}
@@ -117,9 +116,10 @@ middleware server.  A connection is {\bf not} established as soon as
 the client is started.  Instead, of a long-lived connection between
 the client and the middleware, we have opted for making many
 short-lived connections.  When a command is entered in the client,
-only then is a connection made to the middleware, the command is sent,
-and as soon as a response is received, the connection is terminated.
-There are two direct consequences to this design decision:
+only then is a connection established to the middleware, the command
+is sent, and as soon as a response is received, the connection is
+terminated.  There are two direct consequences to this design
+decision:
 
 \begin{itemize}
 \item We can restart the server without having to restart the client.
@@ -141,7 +141,7 @@ resource managers are given as arguments to the middleware.
 The middleware receives commands from the client as {\it
   ArrayList<String>}; it dispatches to the appropriate manager by
 inspecting the first item of the list, the command name.  Commands are
-dispatched according to the following dispatch table:
+dispatched according to the following rules:
 
 
 \begin{itemize}
@@ -154,7 +154,7 @@ dispatched according to the following dispatch table:
 \item If the command name contains the string {\it ``room''}, the
   message is forwarded to the Hotel Manager;
 \item If the command name is exactly {\it ``itinerary''}, the message
-  is broken up into multiple messages sent and sent to the appropriate
+  is broken up into multiple messages and sent to the appropriate
   managers.
 \end{itemize}
 
@@ -238,6 +238,37 @@ reservations.  If we wanted the customer manager to be unaware of the
 middleware, we would need to do the extra communication through other
 means, such as returning to the middleware a result containing a list
 of the reservations to cancel.
+
+\subsection{Message data structures}
+
+There are two basic data structures used to transmit commands and
+result back and forth in the system.
+
+\subsubsection{Requests}
+
+Requests (client commands) are transmitted as an {\it
+  ArrayList<String>}.  This representation is not very rich, but is
+sufficient at the moment for our needs.  If time had allowed it, a
+representation using one class per message type, with a common
+interface would've been a better design decision.
+
+\subsubsection{Results}
+
+Commands can return different results:
+
+\begin{itemize}
+\item Some commands (e.g. {\it newcar}) return true for success and
+  false for failure
+\item Some commands (e.g. {\it querycar}) return an integer
+\item Some commands (e.g. {\it querycustomer}) return a string
+\item Reserve commands return a {\it ReservedItem} object
+\end{itemize}
+
+To satisfy the Java type system, a new serializable class, {\it
+  Result}, containing fields of types boolean, integer, string and
+{\it ReservedItem} was created.  Once a resource manager has finished
+executing a command, the result is wrapped into a result and sent back
+to the middleware.
 
 
 \end{document}
