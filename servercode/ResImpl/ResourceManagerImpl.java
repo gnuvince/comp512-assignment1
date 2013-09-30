@@ -25,9 +25,7 @@ public class ResourceManagerImpl implements ResourceManager {
     
     public static void main(String args[]) {
         // Figure out where server is running
-        String rmServer = "localhost";
-        int port = 5005;
-        
+        int port = 5005;        
         String hotelServer = "localhost";
     	String carServer = "localhost";
     	String flightServer = "localhost";
@@ -253,7 +251,7 @@ public class ResourceManagerImpl implements ResourceManager {
         
         return cust;        
     }
-    
+        
     // Create a new flight, or add seats to existing flight
     // NOTE: if flightPrice <= 0 and the flight already exists, it maintains its
     // current price
@@ -300,61 +298,37 @@ public class ResourceManagerImpl implements ResourceManager {
     }
 
     // Delete cars from a location
-    public boolean deleteCars(int id, String location) throws RemoteException {
-    	
+    public boolean deleteCars(int id, String location) throws RemoteException {    	
     	return rmCar.deleteItem(id, location);
-        //return deleteItem(id, Car.getKey(location));
     }
 
     // Returns the number of empty seats on this flight
-    public int queryFlight(int id, int flightNum) throws RemoteException {
-    	
+    public int queryFlight(int id, int flightNum) throws RemoteException {    	
     	return rmFlight.queryItemQuantity(id, Integer.toString(flightNum));
     }
 
-    // Returns the number of reservations for this flight.
-    // public int queryFlightReservations(int id, int flightNum)
-    // throws RemoteException
-    // {
-    // Trace.info("RM::queryFlightReservations(" + id + ", #" + flightNum +
-    // ") called" );
-    // RMInteger numReservations = (RMInteger) readData( id,
-    // Flight.getNumReservationsKey(flightNum) );
-    // if( numReservations == null ) {
-    // numReservations = new RMInteger(0);
-    // } // if
-    // Trace.info("RM::queryFlightReservations(" + id + ", #" + flightNum +
-    // ") returns " + numReservations );
-    // return numReservations.getValue();
-    // }
-
     // Returns price of this flight
-    public int queryFlightPrice(int id, int flightNum) throws RemoteException {
-    	
+    public int queryFlightPrice(int id, int flightNum) throws RemoteException {    	
     	return rmFlight.queryItemPrice(id, Integer.toString(flightNum));        
     }
 
     // Returns the number of rooms available at a location
-    public int queryRooms(int id, String location) throws RemoteException {
-    	
+    public int queryRooms(int id, String location) throws RemoteException {    	
     	return rmHotel.queryItemQuantity(id, location);
     }
 
     // Returns room price at this location
-    public int queryRoomsPrice(int id, String location) throws RemoteException {
-    	
+    public int queryRoomsPrice(int id, String location) throws RemoteException {    	
     	return rmHotel.queryItemPrice(id, location);
     }
 
     // Returns the number of cars available at a location
-    public int queryCars(int id, String location) throws RemoteException {
-    	
+    public int queryCars(int id, String location) throws RemoteException {    	
     	return rmCar.queryItemQuantity(id, location);
     }
 
     // Returns price of cars at this location
-    public int queryCarsPrice(int id, String location) throws RemoteException {
-    	
+    public int queryCarsPrice(int id, String location) throws RemoteException {    	
     	return rmCar.queryItemPrice(id, location);
     }
 
@@ -453,9 +427,7 @@ public class ResourceManagerImpl implements ResourceManager {
                 Trace.info("RM::deleteCustomer(" + id + ", " + customerID
                     + ") has reserved " + reserveditem.getKey() + " "
                     + reserveditem.getCount() + " times");
-                
-                
-                //TODO: Parse the reservedItem                 
+                                              
                 System.out.println("Cancelling reservation: " + reserveditem.getKey());
                 String itemType = reserveditem.getKey().split("\\-")[0];     
                 switch (itemType) {
@@ -481,28 +453,8 @@ public class ResourceManagerImpl implements ResourceManager {
             return true;
         } // if
     }
-
-    // Frees flight reservation record. Flight reservation records help us make
-    // sure we
-    // don't delete a flight if one or more customers are holding reservations
-    // public boolean freeFlightReservation(int id, int flightNum)
-    // throws RemoteException
-    // {
-    // Trace.info("RM::freeFlightReservations(" + id + ", " + flightNum +
-    // ") called" );
-    // RMInteger numReservations = (RMInteger) readData( id,
-    // Flight.getNumReservationsKey(flightNum) );
-    // if( numReservations != null ) {
-    // numReservations = new RMInteger( Math.max( 0,
-    // numReservations.getValue()-1) );
-    // } // if
-    // writeData(id, Flight.getNumReservationsKey(flightNum), numReservations );
-    // Trace.info("RM::freeFlightReservations(" + id + ", " + flightNum +
-    // ") succeeded, this flight now has "
-    // + numReservations + " reservations" );
-    // return true;
-    // }
-    //
+    
+    
 
     // Adds car reservation to this customer.
     public boolean reserveCar(int id, int customerID, String location)
@@ -561,11 +513,78 @@ public class ResourceManagerImpl implements ResourceManager {
     		
     	return false;      	
     }
-
+    
     /* reserve an itinerary */
-    public boolean itinerary(int id, int customer, Vector flightNumbers,
-        String location, boolean Car, boolean Room) throws RemoteException {
-        return false;
+    public boolean itinerary(int id, int customer, Vector flightNumbers, String location, boolean Car, boolean Room) 
+    	throws RemoteException {  
+    	    
+    	System.out.println("PLEASE PRINT THAT TEXT &^#^$&*$^*");
+    	System.out.println("BOOKING ITINERARY");
+    	
+    	Customer cust = getCustomer(customer);
+    	if (cust == null){
+    		return false;
+    	}
+    	
+    	System.out.println("Client validated");
+    	
+    	ArrayList<String> reservedItems = new ArrayList<String>();
+    	    
+    	boolean result = false;
+    	
+    	for (int i = 0; i < flightNumbers.size(); i++) {
+    		int flightNumber = (int)flightNumbers.get(i);
+    		    	
+    		result = reserveFlight(1, customer, flightNumber);    		
+    		
+    		//If one flight reservation fails, we cancel the previous flights reserved
+    		if (!result) {  
+    			System.out.println(flightNumber + " reservation failed");
+    			cancelItemBatch(cust, reservedItems);    		
+    			return false;
+    		}
+    		
+    		reservedItems.add("flight-" + flightNumber);
+    		System.out.println(flightNumber + " reservation success");
+    	}
+    	
+    	
+    	if (Car) {
+    		//Try to reserve a car at destination
+    		ReservedItem reservedCar = rmCar.reserveItem(1, cust.getKey(), location);
+    		if (reservedCar == null) {
+    			cancelItemBatch(cust, reservedItems);
+    			return false;
+    		}
+    		
+    		reservedItems.add(reservedCar.getKey());
+    		cust.reserve(reservedCar.getKey(), reservedCar.getLocation(), reservedCar.getPrice());
+    	}
+    	
+    	if (Room) {
+    		//Try to reserve a room at destination
+    		ReservedItem reservedRoom = rmHotel.reserveItem(1, cust.getKey(), location);
+    		if (reservedRoom == null) {
+    			cancelItemBatch(cust, reservedItems);
+    			return false;
+    		}
+    		
+    		cust.reserve(reservedRoom.getKey(), reservedRoom.getLocation(), reservedRoom.getPrice());
+    	}
+    	    	
+        return true;
     }
+    
+    private void cancelItemBatch(Customer cust, ArrayList<String> reservedItems) {
+    	for(String key : reservedItems){
+    		cust.cancelReservation(key);
+    	}
+    }    
+    
+    public boolean test(String text) throws RemoteException {
+    	System.out.println(text);    	
+    	return true;
+    }
+   
 
 }
