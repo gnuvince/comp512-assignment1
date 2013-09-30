@@ -27,6 +27,7 @@ public class FlightManagerImpl implements ItemManager {
         // Figure out where server is running
         String server = "localhost";
         int port = 5007;
+        FlightManagerImpl obj = new FlightManagerImpl();
 
         if (args.length != 2) {            
             System.err.println("Usage: java ResImpl.FlightManagerImpl <rmi host|tcp> [<port>]");

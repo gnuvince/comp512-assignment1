@@ -10,7 +10,7 @@ compileserver: policy
 	javac -d bin -cp . ResImpl/*.java
 
 runserver: compileserver
-	java -cp . -Djava.security.policy=./java.policy -Djava.rmi.server.codebase=file:$(CURDIR) ResImpl.ResourceManagerImpl lab7-21.cs.mcgill.ca
+	java -cp . -Djava.security.policy=./java.policy -Djava.rmi.server.codebase=file:$(CURDIR) ResImpl.ResourceManagerImpl lab7-21.cs.mcgill.ca lab7-21.cs.mcgill.ca lab7-21.cs.mcgill.ca
 
 clean:
 	rm -rf bin/*

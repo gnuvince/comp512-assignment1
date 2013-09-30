@@ -24,6 +24,7 @@ public class CarManagerImpl implements ItemManager {
         // Figure out where server is running
         String server = "localhost";
         int port = 5006;
+        CarManagerImpl obj = new CarManagerImpl();
 
         if (args.length != 2) {            
             System.err.println("Usage: java ResImpl.CarManagerImpl <rmi host|tcp> [<port>]");
