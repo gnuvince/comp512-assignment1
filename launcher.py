@@ -3,7 +3,7 @@
 import sys
 import os
 
-if sys.version_info.major != 2:
+if sys.version_info[0] != 2:
     print("The launcher requires Python version 2")
     sys.exit(1)
 
