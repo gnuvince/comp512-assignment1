@@ -96,15 +96,14 @@ public class CustomerManagerImpl {
                                 res.stringResult = queryResult;
                         }
                         else if (msg.get(0).equalsIgnoreCase("cancelcustomer")) {
-                            Customer cust = (Customer)copy.customerTable.get("customer-" + msg.get(2));
-                            System.out.println(cust);
-                            System.out.flush();
-                            if (cust != null) {
-                                cust.cancelReservation(msg.get(3));
-                                res.boolResult = true;
+                            Customer cust = copy.getCustomer(Integer.parseInt(msg.get(2)));
+                            if (cust == null) {
+                                res.boolResult = false;
                             }
                             else {
-                                res.boolResult = false;
+                                System.out.println(msg.get(3) + ": " + msg.get(3).getClass().toString());
+                                cust.cancelReservation(msg.get(3));
+                                res.boolResult = true;
                             }
                         }
                         // Not an actual client command, just used for message passing.
@@ -133,6 +132,7 @@ public class CustomerManagerImpl {
             });
         }
     }
+
 
     protected Integer newCustomer(int sessionId) {
         int cid;

@@ -9,7 +9,7 @@ if sys.version_info[0] != 2:
 
 
 
-CLASS_PATH = "carcode/bin:flightcode/bin:hotelcode/bin:servercode/bin:tcpcode/bin:customercode/bin"
+CLASS_PATH = "customercode/bin:carcode/bin:flightcode/bin:hotelcode/bin:tcpcode/bin:servercode/bin"
 
 def usage():
     print "Usage: %s <component> <tcp|rmi> <port> [<extra args>]" % sys.argv[0]
