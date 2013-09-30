@@ -18,11 +18,12 @@ public class HotelManagerImpl implements ItemManager {
         String server = "localhost";
         int port = 5005;
 
-        if (args.length == 1) {
-            server = server + ":" + args[0];
+        if (args.length == 2) {            
+            server = args[0];
+            port = Integer.parseInt(args[1]);
         } else if (args.length != 0 &&  args.length != 1) {
             System.err.println ("Wrong usage");
-            System.out.println("Usage: java ResImpl.HotelManagerImpl [port]");
+            System.out.println("Usage: java ResImpl.HotelManagerImpl [server] [port]");
             System.exit(1);
         }
 
@@ -34,7 +35,7 @@ public class HotelManagerImpl implements ItemManager {
             ItemManager rm = (ItemManager) UnicastRemoteObject.exportObject(obj, 0);
 
             // Bind the remote object's stub in the registry
-            Registry registry = LocateRegistry.getRegistry(port);
+            Registry registry = LocateRegistry.getRegistry(server, port);
             registry.rebind("Group5_HotelManager", rm);
 
             System.err.println("Hotel Server ready");
@@ -61,6 +62,8 @@ public class HotelManagerImpl implements ItemManager {
             // the manager's hash table.
             Hotel newObj = new Hotel(location, quantity, price);
             putHotel(id, newObj.getKey(), newObj);
+            Trace.info("RM::addHotel(" + id + ") created new location "
+                    + location + ", count=" + quantity + ", price=$" + price);
         }
         else {
             // If the hotel already exists, update its quantity (by adding
@@ -71,10 +74,11 @@ public class HotelManagerImpl implements ItemManager {
                 curObj.setPrice(price);
             }
             putHotel(id, Hotel.getKey(location), curObj);
+            Trace.info("RM::addHotel(" + id + ") modified existing location "
+                    + location + ", count=" + curObj.getCount() + ", price=$"
+                    + curObj.getPrice());
         }
-        
-        System.out.println("Hotel " + location + " was added");
-        
+                
         return true;
     }
 
@@ -85,17 +89,23 @@ public class HotelManagerImpl implements ItemManager {
         Hotel curObj = fetchHotel(id, itemId);
                 
         if (curObj == null) {
-        	System.out.println("The hotel you are trying to delete doesn't exist " + itemId);
+        	Trace.warn("RM::deleteItem(" + id + ", " + itemId
+                    + ") failed--item doesn't exist"); 
             return false;
         }
         else {
             if (curObj.getReserved() == 0) {
                 deleteHotel(id, curObj.getKey());
-                System.out.println("Hotel " + itemId + " deleted successfully");
+                Trace.info("RM::deleteItem(" + id + ", " + itemId
+                        + ") item deleted");
                 return true;
             }
             else {
-            	System.out.println("Hotel " + itemId + " can't be deleted because a customer reserved it!" );
+            	Trace.info("RM::deleteItem("
+                        + id
+                        + ", "
+                        + itemId
+                        + ") item can't be deleted because some customers reserved it");
                 return false;
             }
         } 
@@ -127,12 +137,13 @@ public class HotelManagerImpl implements ItemManager {
     	    	
         Hotel curObj = fetchHotel(id, Hotel.getKey(location));
         
-        if (curObj == null) {
-        	System.out.println("Room in " + location + " couldn't be reserved because none exists");
+        if (curObj == null) {        	
+        	Trace.warn("RM::reserveRoom( " + id + ", " + customerId + ", " + location + ") failed--item doesn't exist"); 
             return null;
         }
         else if (curObj.getCount() == 0) {
         	System.out.println("Room in " + location + " couldn't be reserved because they are all reserved");
+        	Trace.warn("RM::reserveRoom( " + id + ", " + customerId + ", " + location + ") failed--No more items");
             return null;
         }
         else {        	
@@ -143,8 +154,8 @@ public class HotelManagerImpl implements ItemManager {
             curObj.setReserved(curObj.getReserved() + 1);
 
             putHotel(id, key, curObj);
-            
-            System.out.println("Customer " + customerId + " reserved a room in " + location);
+                        
+            Trace.info("RM::reserveRoom( " + id + ", " + customerId + ", " + key + ") succeeded");
             return new ReservedItem(key, curObj.getLocation(), 1, curObj.getPrice());
         }
     }

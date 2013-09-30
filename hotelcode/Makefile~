@@ -10,7 +10,7 @@ compilehotel: policy
 	javac -cp . ResImpl/*.java
 
 runhotel: compilehotel
-	java -cp . -Djava.security.policy=./java.policy -Djava.rmi.server.codebase=file:$(CURDIR) ResImpl.ResourceManagerImpl
+	java -cp . -Djava.security.policy=./java.policy -Djava.rmi.server.codebase=file:$(CURDIR) ResImpl.HotelManagerImpl lab7-21.cs.mcgill.ca 5005
 
 clean:
 	rm -f ResImpl/*.class

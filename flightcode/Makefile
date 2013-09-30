@@ -9,7 +9,7 @@ compileflight: policy
 	javac -cp . ResImpl/*.java
 
 runflight: compileflight
-	java -cp . -Djava.security.policy=./java.policy -Djava.rmi.server.codebase=file:$(CURDIR) ResImpl.FlightManagerImpl
+	java -cp . -Djava.security.policy=./java.policy -Djava.rmi.server.codebase=file:$(CURDIR) ResImpl.FlightManagerImpl localhost 5007
 
 clean:
 	rm -f ResImpl/*.class

@@ -9,7 +9,7 @@ compileserver: policy
 	javac -g -cp . ResImpl/*.java
 
 runserver: compileserver
-	java -cp . -Djava.security.policy=./java.policy -Djava.rmi.server.codebase=file:$(CURDIR) ResImpl.ResourceManagerImpl
+	java -cp . -Djava.security.policy=./java.policy -Djava.rmi.server.codebase=file:$(CURDIR) ResImpl.ResourceManagerImpl lab7-21.cs.mcgill.ca
 
 clean:
 	rm -f ResImpl/*.class

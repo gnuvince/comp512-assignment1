@@ -9,7 +9,7 @@ compilecar: policy
 	javac -cp . ResImpl/*.java
 
 runcar: compilecar
-	java -cp . -Djava.security.policy=./java.policy -Djava.rmi.server.codebase=file:$(CURDIR) ResImpl.CarManagerImpl
+	java -cp . -Djava.security.policy=./java.policy -Djava.rmi.server.codebase=file:$(CURDIR) ResImpl.CarManagerImpl localhost 5006
 
 clean:
 	rm -f ResImpl/*.class

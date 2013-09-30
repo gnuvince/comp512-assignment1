@@ -22,24 +22,31 @@ public class ResourceManagerImpl implements ResourceManager {
     protected ItemManager rmHotel = null;    
     protected ItemManager rmCar = null;
     protected ItemManager rmFlight = null;
-
+    
     public static void main(String args[]) {
         // Figure out where server is running
         String rmServer = "localhost";
         int port = 5005;
+        
+        String hotelServer = "localhost";
+    	String carServer = "localhost";
+    	String flightServer = "localhost";
 
-        if (args.length == 1) {
-        	rmServer = args[0];
-        } else if (args.length != 0 &&  args.length != 1) {
+        if (args.length == 3) {
+        	hotelServer = args[0];
+        	carServer = args[1];
+        	flightServer = args[2];
+        	
+        } else {
             System.err.println ("Wrong usage");
-            System.out.println("Usage: java ResImpl.ResourceManagerImpl [RM server]");
+            System.out.println("Usage: java ResImpl.ResourceManagerImpl [hotel server] [car server] [flight server]");
             System.exit(1);
         }
 
         try 
         {
             // create a new Server object
-            ResourceManagerImpl obj = new ResourceManagerImpl(rmServer);
+            ResourceManagerImpl obj = new ResourceManagerImpl(hotelServer, carServer, flightServer);
             // dynamically generate the stub (client proxy)
             ResourceManager rm = (ResourceManager) UnicastRemoteObject.exportObject(obj, 0);
 
@@ -61,50 +68,7 @@ public class ResourceManagerImpl implements ResourceManager {
         }
     }
 
-    public ResourceManagerImpl(String rmServer) throws RemoteException {       	
-    	
-    	//Initialize RMs
-    	//wanted to pass ItemManagers as reference but didn't find how to do this with java
-    	//Goal: have a short and clean initRm() method
-    	/*
-    	initRM("lab7-21.cs.mcgill.ca", 5005, "Group5_HotelManager", rmHotel);
-    	initRM("lab7-21.cs.mcgill.ca", 5006, "Group5_CarManager", rmCar);
-    	initRM("lab7-21.cs.mcgill.ca", 5007, "Group5_FlightManager", rmFlight);
-    	*/    	
-    	initRMs(rmServer);    	
-    }
-    
-    //Establish connection with every resource manager
-    //Tried to make a more generic version but can't pass ItemManager as reference
-    private void initRM(String server, int port, String lookupName, ItemManager rmObject) {    	
-    	
-    	try {
-    		// get a reference to the rmiregistry on Hotel's server
-		    Registry registry = LocateRegistry.getRegistry(server, port);
-		    // get the proxy and the remote reference by rmiregistry lookup
-		    rmObject = (ItemManager) registry.lookup(lookupName);
-		    if(rmObject!=null)
-			{
-			    System.out.println("Successfully connected to " + lookupName);			    
-			}
-		    else
-			{
-			    System.out.println("Connection to " + lookupName + " failed");
-			}		    
-	    }
-	    catch (Exception e)
-		{
-		    System.err.println(lookupName + " exception: " + e.toString());
-		    e.printStackTrace();
-		}
-    }
-    
-    private void initRMs(String rmServer) {
-    	//can specify different servers here...
-    	//implementation assumes they all run on same machine
-    	String hotelServer = rmServer; 
-    	String carServer = rmServer;
-    	String flightServer = rmServer;
+    public ResourceManagerImpl(String hotelServer, String carServer, String flightServer) throws RemoteException {           	
     	int hotelPort = 5005;
     	int carPort = 5006;
     	int flightPort = 5007;
@@ -165,7 +129,7 @@ public class ResourceManagerImpl implements ResourceManager {
 		    e.printStackTrace();
 		}
     }
-
+        
     // Reads a data item
     private RMItem readData(int id, String key) {
         synchronized (m_itemHT) {

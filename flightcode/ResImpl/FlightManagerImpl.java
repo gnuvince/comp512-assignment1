@@ -17,11 +17,12 @@ public class FlightManagerImpl implements ItemManager {
         String server = "localhost";
         int port = 5007;
 
-        if (args.length == 1) {
-            server = server + ":" + args[0];
+        if (args.length == 2) {
+        	server = args[0];
+            port = Integer.parseInt(args[1]);
         } else if (args.length != 0 &&  args.length != 1) {
             System.err.println ("Wrong usage");
-            System.out.println("Usage: java ResImpl.FlightManagerImpl [port]");
+            System.out.println("Usage: java ResImpl.FlightManagerImpl [server] [port]");
             System.exit(1);
         }
 

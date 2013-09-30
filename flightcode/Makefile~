@@ -3,12 +3,12 @@ policy:
 	@echo "    permission java.security.AllPermission;" >> java.policy
 	@echo "};" >> java.policy
 
-compilehotel: policy
+compileflight: policy
 	javac -cp . ResInterface/ItemManager.java
 	jar cvf ResInterface.jar ResInterface/*.class
 	javac -cp . ResImpl/*.java
 
-runhotel: compilehotel
+runflight: compileflight
 	java -cp . -Djava.security.policy=./java.policy -Djava.rmi.server.codebase=file:$(CURDIR) ResImpl.FlightManagerImpl
 
 clean:
