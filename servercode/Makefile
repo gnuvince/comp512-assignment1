@@ -4,14 +4,14 @@ policy:
 	@echo "};" >> java.policy
 
 compileserver: policy
-	javac -cp . ResInterface/ResourceManager.java
-	jar cvf ResInterface.jar ResInterface/*.class
-	javac -g -cp . ResImpl/*.java
+	mkdir -p bin
+	javac -d bin -cp . ResInterface/ResourceManager.java
+	jar cvf ResInterface.jar bin/ResInterface/*.class
+	javac -d bin -cp . ResImpl/*.java
 
 runserver: compileserver
 	java -cp . -Djava.security.policy=./java.policy -Djava.rmi.server.codebase=file:$(CURDIR) ResImpl.ResourceManagerImpl lab7-21.cs.mcgill.ca
 
 clean:
-	rm -f ResImpl/*.class
-	rm -f ResInterface/*.class
+	rm -rf bin/*
 	rm -f ResInterface.jar

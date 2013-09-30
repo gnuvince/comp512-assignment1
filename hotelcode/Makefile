@@ -4,15 +4,11 @@ policy:
 	@echo "};" >> java.policy
 
 compilehotel: policy
-	javac -cp . ResInterface/ResourceManager.java
-	javac -cp . ResInterface/ItemManager.java
-	jar cvf ResInterface.jar ResInterface/*.class
-	javac -cp . ResImpl/*.java
+	mkdir -p bin
+	javac -d bin -cp ../servercode/bin:../tcpcode/bin ResImpl/*.java
 
 runhotel: compilehotel
 	java -cp . -Djava.security.policy=./java.policy -Djava.rmi.server.codebase=file:$(CURDIR) ResImpl.HotelManagerImpl localhost 5005
 
 clean:
-	rm -f ResImpl/*.class
-	rm -f ResInterface/*.class
-	rm -f ResInterface.jar
+	rm -rf bin/*

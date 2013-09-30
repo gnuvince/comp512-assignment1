@@ -9,7 +9,14 @@ import java.util.StringTokenizer;
 
 public class TCPClient {
     public static void main(String[] args) {
-        String serverHost = args.length == 1 ? args[0] : "localhost";
+        if (args.length != 2) {
+            System.err.println("Usage: TCPClient hostname port");
+            System.exit(1);
+        }
+            
+        String serverHost = args[0];
+        int serverPort = Integer.parseInt(args[1]);
+        
         BufferedReader stdin = new BufferedReader(new InputStreamReader(
             System.in));
 
@@ -26,23 +33,38 @@ public class TCPClient {
                 if (msg.isEmpty()) {
                     continue;
                 }
+                
+                // Help and quit commands are not passed to the server.
                 else if (msg.get(0).equalsIgnoreCase("help")) {
                     help(msg);
                 }
                 else if (msg.get(0).equalsIgnoreCase("quit")) {
                     System.exit(0);
                 }
+                
+                // For all other commands, a connection to the middleware
+                // is established, the complete command + arguments sent over
+                // the wire and we wait for a result object.
                 else {
-                    Socket socket = new Socket("localhost", 5566);
+                    Socket socket = new Socket(serverHost, serverPort);
                     
                     try {
                         Comm.sendObject(socket, msg);
-                        Boolean b = (Boolean)Comm.recvObject(socket);
-                        if (b) {
-                            System.out.println("Success");
+                        Result b = (Result)Comm.recvObject(socket);
+                        if (b.boolResult != null) {
+                            System.out.println(b.boolResult ? "OK" : "Failure");
                         }
-                        else {
-                            System.out.println("Failure");
+                        else if (b.intResult != null) {
+                            System.out.println(b.intResult);
+                        }
+                        else if (b.reservationResult != null) {
+                            System.out.println("Reservation successful");
+                        }
+                        else if (b.stringResult != null) {
+                            System.out.println(b.stringResult);
+                        }
+                        else if (b.reservationResult == null) {
+                            System.out.println("Reservation failed");
                         }
                     }
                     catch (Exception e) {
@@ -64,8 +86,7 @@ public class TCPClient {
 
     }
     
-    
- 
+  
 
     public static ArrayList<String> parse(String command) {
         ArrayList<String> arguments = new ArrayList<String>();
@@ -304,7 +325,7 @@ public class TCPClient {
             add("quit");
             add("newcustomerid");
         }};
-        return commands.indexOf(command);
+        return commands.indexOf(command)+1;
     }
 
 }

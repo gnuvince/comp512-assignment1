@@ -1,12 +1,23 @@
 package ResImpl;
 
+
+import java.io.IOException;
+import java.net.ServerSocket;
+import java.net.Socket;
 import java.rmi.RMISecurityManager;
 import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
 import java.rmi.server.UnicastRemoteObject;
+import java.util.ArrayList;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
-import ResInterface.ItemManager;
+
+import comp512.Comm;
+import comp512.Result;
+import ResInterface.*;
+
 
 public class FlightManagerImpl implements ItemManager {
     
@@ -17,24 +28,33 @@ public class FlightManagerImpl implements ItemManager {
         String server = "localhost";
         int port = 5007;
 
-        if (args.length == 2) {
-        	server = args[0];
-            port = Integer.parseInt(args[1]);
-        } else if (args.length != 0 &&  args.length != 1) {
-            System.err.println ("Wrong usage");
-            System.out.println("Usage: java ResImpl.FlightManagerImpl [server] [port]");
+        if (args.length != 2) {            
+            System.err.println("Usage: java ResImpl.FlightManagerImpl <rmi host|tcp> [<port>]");
             System.exit(1);
+        }
+        else {
+            server = args[0];
+            port = Integer.parseInt(args[1]);
+            if (args[0].equals("tcp")) {
+                try {
+                    obj.tcpServer(Integer.parseInt(args[1]));
+                    System.exit(0);
+                }
+                catch (IOException e) {
+                    System.err.println(e.getMessage());
+                    System.exit(1);
+                }
+            }
         }
 
         try 
         {
             // create a new Server object
-        	FlightManagerImpl obj = new FlightManagerImpl();
             // dynamically generate the stub (client proxy)
             ItemManager rm = (ItemManager) UnicastRemoteObject.exportObject(obj, 0);
 
             // Bind the remote object's stub in the registry
-            Registry registry = LocateRegistry.getRegistry(port);
+            Registry registry = LocateRegistry.getRegistry(server, port);
             registry.rebind("Group5_FlightManager", rm);
 
             System.err.println("Flight Server ready");
@@ -48,6 +68,78 @@ public class FlightManagerImpl implements ItemManager {
         // Create and install a security manager
         if (System.getSecurityManager() == null) {
             System.setSecurityManager(new RMISecurityManager());
+        }
+    }
+    
+    public void tcpServer(int port) throws IOException {
+        ServerSocket server = new ServerSocket(port);
+        ExecutorService executor = Executors.newFixedThreadPool(16);
+        
+        while (true) {
+            final Socket connection = server.accept();
+            System.out.println("Accepting connection: " + connection.toString());
+            final FlightManagerImpl copy = this;
+            executor.execute(new Runnable() {
+                public void run() {
+
+                    Result res = new Result();
+
+                    try {
+                        ArrayList<String> msg = (ArrayList<String>) Comm.recvObject(connection);
+
+                        if (msg.get(0).equalsIgnoreCase("newflight")) {
+                            res.boolResult = 
+                                copy.addItem(
+                                    Integer.parseInt(msg.get(1)), 
+                                    msg.get(2), 
+                                    Integer.parseInt(msg.get(3)), 
+                                    Integer.parseInt(msg.get(4)));
+                        }
+                        else if (msg.get(0).equalsIgnoreCase("deleteflight")) {
+                            res.boolResult = 
+                                copy.deleteItem(
+                                    Integer.parseInt(msg.get(1)), 
+                                    msg.get(2)); 
+                        }
+                        else if (msg.get(0).equalsIgnoreCase("queryflight")) {
+                            res.intResult =
+                                copy.queryItemQuantity(
+                                    Integer.parseInt(msg.get(1)), 
+                                    msg.get(2)); 
+                        }
+                        else if (msg.get(0).equalsIgnoreCase("queryflightprice")) {
+                            res.intResult =
+                                copy.queryItemPrice(
+                                    Integer.parseInt(msg.get(1)), 
+                                    msg.get(2)); 
+                        }
+                        else if (msg.get(0).equalsIgnoreCase("reserveflight")) {
+                            res.reservationResult = 
+                                copy.reserveItem(
+                                    Integer.parseInt(msg.get(1)), 
+                                    msg.get(2),
+                                    msg.get(3));
+                        }
+                        else if (msg.get(0).equalsIgnoreCase("cancelflight")) {
+                            res.boolResult = 
+                                copy.cancelItem(
+                                    Integer.parseInt(msg.get(1)), 
+                                    msg.get(2),
+                                    Integer.parseInt(msg.get(3)));
+                        }
+                        else {
+                            res.boolResult = false;
+                        }
+
+                        Comm.sendObject(connection, res);
+                        connection.close();
+                    }
+                    catch (Exception e) {
+                        res.boolResult = false;
+                        Comm.sendObject(connection, res);
+                    }
+                }
+            });
         }
     }
 

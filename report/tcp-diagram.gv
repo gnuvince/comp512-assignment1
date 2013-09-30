@@ -1,0 +1,24 @@
+digraph G {
+    client [label="Client", shape="rectangle"];
+    middleware [label="Middleware", shape="circle"];
+    customer_manager [label="Customer Manager", shape="rectangle"];
+    car_manager [label="Car Manager", shape="rectangle"];
+    flight_manager [label="Flight Manager", shape="rectangle"];
+    hotel_manager [label="Hotel Manager", shape="rectangle"];
+
+    client -> middleware;
+    middleware -> client;
+
+    middleware -> customer_manager;
+    customer_manager -> middleware;
+
+    middleware -> car_manager;
+    car_manager -> middleware;
+
+    middleware -> flight_manager;
+    flight_manager -> middleware;
+
+    middleware -> hotel_manager;
+    hotel_manager -> middleware;
+
+}
