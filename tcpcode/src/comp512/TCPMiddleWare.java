@@ -84,7 +84,7 @@ public class TCPMiddleWare {
         }
         catch (IOException e) {
             System.err.println(e.getMessage());
-            System.err.println("Cannot create a new socket on port 5566.");
+            System.err.println("Cannot create a new socket on port " + port);
             System.exit(1);
         }
     }
