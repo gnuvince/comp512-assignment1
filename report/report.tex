@@ -20,61 +20,89 @@
 
 \maketitle
 
-\section{Compilation and execution}
 
-The whole system can easily be built with a single command:
+
+
+\section{RMI}
+
+\subsection{Architecture}
+
+For the RMI part of the project, we needed to split {\it
+  ResourceManagerImpl} into different components for all the
+resources.  We have opted to create three (3) new classes:
+
+
+\begin{itemize}
+  \item CarManagerImpl
+  \item FlightManagerImpl
+  \item HotelManagerImpl
+\end{itemize}
+
+Unlike in the TCP part of the project, we have opted to leave the
+management of customer accounts inside the middleware component, since
+most commands involve the {\it Customer} object.
+
+The system is designed in such a way that every resource manager must
+have its own RMI Registry instance.  This allows greater flexibility
+by distributing the RMI registries over multiple machines.
+
+The difficulty of this task was mostly in getting the RMI registries
+to run properly, with the appropriate permissions (java.policy file
+and directory user permissions).
+
+Attempts to use a single registry for all managers have been
+abandonned as it wasn't possible to bind an object onto a remote
+registry.
+
+
+\subsection{Compilation and execution}
+
+You can compile the entire system by issuing the following command at
+the root of the project:
 
 
 \begin{verbatim}
 $ make
 \end{verbatim}
 
-Running {\it make} in the root folder of the project will compile
-all the different compononents of the project (middleware, client,
-resource managers).
+To run the systems, you must first execute the three resource
+managers.  First, a RMI registry instance per manager must be started
+with the appropriate port to use.  You can see the default port in the
+Makefile, and change it if necessary.  Be sure to include the proper
+CLASSPATH when starting the registry:
 
-The different components can be started by using the helper {\it
-  launcher.py} script in the root folder of the project.  The basic
-syntax of the script is as follows:
+\begin{verbatim}
+$ CLASSPATH=servercode/bin rmiregistry <port>
+\end{verbatim}
+
+
+Next, you must start the actual resource manager. This can be done by
+going into the directory of the desired manager, and executing a {\it
+  make} command.  For example, to start the Car manager:
+
+\begin{verbatim}
+$ cd carcode
+$ make runcar
+\end{verbatim}
+
+The Hotel and Flight managers can be executed similarly by changing
+the directory name ({\it hotelcode} and {\it flightcode},
+respectively) and by modifying the make task ({\it runhotel} and {\it
+  runflight} respectively).
+
+The middleware server can be started by going into the {\it
+  servercode} directory and executing the {\it make runserver}
+command.  You must edit the Makefile to specify the hosts of the
+hotel, car and flight managers, in that order.  For instance:
 
 
 \begin{verbatim}
-./launcher.py <component> <tcp|rmi> <port> <extra args>
+runserver: compileserver
+    java <elided> ResImpl.ResourceManagerImpl mimi linux willy
 \end{verbatim}
 
-The component is any of:
-
-\begin{itemize}
-\item middleware
-\item client
-\item customer
-\item car
-\item flight
-\item hotel
-\end{itemize}
-
-You can select if you want the component to use the TCP protocol or
-the RMI protocol.  Note that you cannot mix-and-match components of
-different protocols (e.g. a TCP client cannot communicate with a RMI
-middleware).
-
-The port parameter lets you select on which port the middleware and
-resource managers should listen on.  For the client, the port
-parameter is the port of the middleware that it should connect to.
-
-Finally, you can specify extra arguments to be passed to the
-component.  Thw following components require extra arguments:
-
-\begin{itemize}
-\item client: requires the hostname of the middleware
-\item customer: requires the hostname and port of the middleware.  The
-  syntax is {\it host:port}.
-\item middleware: requires the hostnames and ports of all resource
-  managers.  The syntax is {\it backend=host:port}.  For example,
-  specifying the customer resource manager location is done with {\it
-    customer=localhost:9000}.
-\end{itemize}
-
+This would execute the server with the Hotel manager on mimi, Car
+manager on linux, and Flight manager on willy.
 
 
 
@@ -239,6 +267,15 @@ middleware, we would need to do the extra communication through other
 means, such as returning to the middleware a result containing a list
 of the reservations to cancel.
 
+The following figure shows how messages flow between different
+components during the execution of three (3) commands.
+
+\begin{center}
+  \includegraphics[scale=0.75]{dataflow-tcp.pdf}
+\end{center}
+
+
+
 \subsection{Message data structures}
 
 There are two basic data structures used to transmit commands and
@@ -281,6 +318,90 @@ client.  In an industrial system, we would probably prefer to validate
 on the client that the command is well-formed, as well as return a
 proper error code from the resource manager (in case someone manages
 to bypass the client validation).
+
+
+\subsection{Compilation and execution}
+
+The whole system can easily be built with a single command:
+
+
+\begin{verbatim}
+$ make
+\end{verbatim}
+
+Running {\it make} in the root folder of the project will compile
+all the different compononents of the project (middleware, client,
+resource managers).
+
+The different components can be started by using the helper {\it
+  launcher.py} script in the root folder of the project.  The basic
+syntax of the script is as follows:
+
+
+\begin{verbatim}
+./launcher.py <component> <tcp|rmi> <port> <extra args>
+\end{verbatim}
+
+The component is any of:
+
+\begin{itemize}
+\item middleware
+\item client
+\item customer
+\item car
+\item flight
+\item hotel
+\end{itemize}
+
+You can select if you want the component to use the TCP protocol or
+the RMI protocol.  Note that you cannot mix-and-match components of
+different protocols (e.g. a TCP client cannot communicate with a RMI
+middleware).
+
+The port parameter lets you select on which port the middleware and
+resource managers should listen on.  For the client, the port
+parameter is the port of the middleware that it should connect to.
+
+Finally, you can specify extra arguments to be passed to the
+component.  Thw following components require extra arguments:
+
+\begin{itemize}
+\item client: requires the hostname of the middleware
+\item customer: requires the hostname and port of the middleware.  The
+  syntax is {\it host:port}.
+\item middleware: requires the hostnames and ports of all resource
+  managers.  The syntax is {\it backend=host:port}.  For example,
+  specifying the customer resource manager location is done with {\it
+    customer=localhost:9000}.
+\end{itemize}
+
+
+
+
+\section{Testing approach}
+
+The distributed nature of the system renders a unit test approach
+difficult and we preferred to shy away from such an undertaking and
+instead concentrate on a small set of tests to be performed by hand.
+
+The tests involved most of the commands of the system:
+
+
+\begin{itemize}
+  \item Creating new objects in the system (e.g. customers, cars,
+    hotels, and flights)
+  \item Creating reservations between customers and resources
+  \item Attempting reservation on resources that have already been
+    reserved
+  \item Deleting a customer, and making sure that the associated
+    reservations are properly freed
+  \item Making sure that we cannot delete a resource that is currently
+    in reservation by a customer
+  \item Making valid and invalid itinerary commands, making sure that
+    there is proper rollback of the already allocated resources in the
+    case of a failure
+\end{itemize}
+
 
 
 \end{document}
