@@ -96,7 +96,7 @@ public class CustomerManagerImpl {
                                 res.stringResult = queryResult;
                         }
                         else if (msg.get(0).equalsIgnoreCase("cancelcustomer")) {
-                            Customer cust = copy.getCustomer(Integer.parseInt(msg.get(2)));
+                            TCPCustomer cust = copy.getCustomer(Integer.parseInt(msg.get(2)));
                             if (cust == null) {
                                 res.boolResult = false;
                             }
@@ -108,7 +108,7 @@ public class CustomerManagerImpl {
                         }
                         // Not an actual client command, just used for message passing.
                         else if (msg.get(0).equalsIgnoreCase("reservation")) {
-                            Customer cust = copy.getCustomer(Integer.parseInt(msg.get(1)));
+                            TCPCustomer cust = copy.getCustomer(Integer.parseInt(msg.get(1)));
                             if (cust != null) {
                                 cust.reserve(msg.get(2), msg.get(3), Integer.parseInt(msg.get(4)));
                                 res.boolResult = true;
@@ -149,9 +149,9 @@ public class CustomerManagerImpl {
     protected Boolean newCustomer(int sessionId, int customerId) {
         Trace.info("INFO: RM::newCustomer(" + sessionId + ", " + customerId
             + ") called");
-        Customer cust = getCustomer(customerId);
+        TCPCustomer cust = getCustomer(customerId);
         if (cust == null) {
-            cust = new Customer(customerId);
+            cust = new TCPCustomer(customerId);
             putCustomer(sessionId, cust.getKey(), cust);
             Trace.info("INFO: RM::newCustomer(" + sessionId + ", " + customerId
                 + ") created a new customer");
@@ -164,15 +164,15 @@ public class CustomerManagerImpl {
         } 
     }
 
-    protected Customer getCustomer(int customerId) {
-        Customer cust = fetchCustomer(0, Customer.getKey(customerId));
+    protected TCPCustomer getCustomer(int customerId) {
+        TCPCustomer cust = fetchCustomer(0, TCPCustomer.getKey(customerId));
         return cust;    
     }
 
     protected String queryCustomerInfo(int sessionId, int customerId) {
         Trace.info("RM::queryCustomerInfo(" + sessionId + ", " + customerId
             + ") called");
-        Customer cust = getCustomer(customerId);
+        TCPCustomer cust = getCustomer(customerId);
         if (cust == null) {
             Trace.warn("RM::queryCustomerInfo(" + sessionId + ", " + customerId
                 + ") failed--customer doesn't exist");
@@ -189,7 +189,7 @@ public class CustomerManagerImpl {
 
     protected Boolean deleteCustomer(int sessionId, int customerId, HostPort hp) {
         Trace.info("RM::deleteCustomer(" + sessionId + ", " + customerId + ") called");
-        Customer cust = getCustomer(customerId);
+        TCPCustomer cust = getCustomer(customerId);
         if (cust == null) {
             Trace.warn("RM::deleteCustomer(" + sessionId + ", " + customerId
                 + ") failed--customer doesn't exist");
@@ -235,13 +235,13 @@ public class CustomerManagerImpl {
         }
     }
 
-    private Customer fetchCustomer(int id, String itemId) {
+    private TCPCustomer fetchCustomer(int id, String itemId) {
         synchronized (customerTable) {
-            return (Customer)customerTable.get(itemId);
+            return (TCPCustomer)customerTable.get(itemId);
         }
     }
     
-    private void putCustomer(int id, String itemId, Customer Customer) {
+    private void putCustomer(int id, String itemId, TCPCustomer Customer) {
         synchronized (customerTable) {
             customerTable.put(itemId, Customer);            
         }
