@@ -135,16 +135,9 @@ public class HotelManagerImpl implements ItemManager {
                         Comm.sendObject(connection, res);
                         connection.close();
                     }
-                    catch (NumberFormatException e) {
+                    catch (Exception e) {
                         res.boolResult = false;
                         Comm.sendObject(connection, res);
-                    }
-                    catch (RemoteException e) {
-                        res.boolResult = false;
-                        Comm.sendObject(connection, res);
-                    }
-                    catch (IOException e) {
-                        e.printStackTrace();
                     }
                 }
             });

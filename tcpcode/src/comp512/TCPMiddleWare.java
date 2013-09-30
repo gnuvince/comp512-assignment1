@@ -138,8 +138,47 @@ class BackendDispatcher implements Callable<Result> {
 
         }
         else if (cmd.contains("itinerary")) {
-            // TODO: send reserve requests to all backends.
-            return null;
+            // TODO: should we lock the customer to make sure he's not deleted
+            // in the middle of booking his itinerary?
+            
+            HostPort flightHp = backends.get("flight");
+            HostPort carHp = backends.get("car");
+            HostPort hotelHp = backends.get("hotel");
+            String sessionId = msg.get(1);
+            String customerId = msg.get(2);
+
+            // Book flights
+            for (int i = 3; i < msg.size()-3; ++i) {
+                ArrayList<String> flightMsg = new ArrayList<String>();
+                flightMsg.add("reserveflight");
+                flightMsg.add(sessionId); // Reuse session id
+                flightMsg.add(customerId);
+                flightMsg.add(msg.get(i));
+                this.sendCommand(flightHp, flightMsg);
+            }
+
+            // Book car
+            ArrayList<String> carMsg = new ArrayList<String>();
+            carMsg.add("reservecar");
+            carMsg.add(sessionId);
+            carMsg.add(customerId);
+            carMsg.add(msg.get(msg.size() - 3));
+            carMsg.add(msg.get(msg.size() - 2));
+            this.sendCommand(carHp, carMsg);
+            
+            // Book hotel
+            ArrayList<String> hotelMsg = new ArrayList<String>();
+            hotelMsg.add("reserveroom");
+            hotelMsg.add(sessionId);
+            hotelMsg.add(customerId);
+            hotelMsg.add(msg.get(msg.size() - 3));
+            hotelMsg.add(msg.get(msg.size() - 1));
+            this.sendCommand(hotelHp, hotelMsg);
+            
+            Result res = new Result();
+            res.boolResult = true;
+            return res;
+            
         }
         else {
             Result res = new Result();
@@ -147,10 +186,15 @@ class BackendDispatcher implements Callable<Result> {
             return res;
         }
         
+        return sendCommand(hp, this.msg);
+    }
+
+    private Result sendCommand(HostPort hp, ArrayList<String> msg) {
+        Socket socket;
         try {
             
             socket = new Socket(hp.host, hp.port);
-            Comm.sendObject(socket, this.msg);
+            Comm.sendObject(socket, msg);
             Result res = (Result)Comm.recvObject(socket);
             socket.close();
             
