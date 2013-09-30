@@ -12,6 +12,10 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 
+import ResImpl.Customer;
+import ResImpl.ReservableItem;
+import ResImpl.ReservedItem;
+
 public class TCPMiddleWare {
     private Map<String, HostPort> backends;
     
@@ -141,6 +145,8 @@ class BackendDispatcher implements Callable<Result> {
             // TODO: should we lock the customer to make sure he's not deleted
             // in the middle of booking his itinerary?
             
+            ArrayList<ReservedItem> processedCommands = new ArrayList<ReservedItem>();
+            Result cumulativeResult = new Result();
             HostPort flightHp = backends.get("flight");
             HostPort carHp = backends.get("car");
             HostPort hotelHp = backends.get("hotel");
@@ -154,26 +160,35 @@ class BackendDispatcher implements Callable<Result> {
                 flightMsg.add(sessionId); // Reuse session id
                 flightMsg.add(customerId);
                 flightMsg.add(msg.get(i));
-                this.sendCommand(flightHp, flightMsg);
+                cumulativeResult = this.sendCommand(flightHp, flightMsg);
+                if (cumulativeResult.reservationResult != null) {
+                    processedCommands.add(cumulativeResult.reservationResult);
+                }
+                else {
+                    cancelProcessedCommands(processedCommands, customerId);
+                    return cumulativeResult;
+                }
             }
 
             // Book car
-            ArrayList<String> carMsg = new ArrayList<String>();
-            carMsg.add("reservecar");
-            carMsg.add(sessionId);
-            carMsg.add(customerId);
-            carMsg.add(msg.get(msg.size() - 3));
-            carMsg.add(msg.get(msg.size() - 2));
-            this.sendCommand(carHp, carMsg);
+            if (!msg.get(msg.size() - 2).equals("0")) {
+                ArrayList<String> carMsg = new ArrayList<String>();
+                carMsg.add("reservecar");
+                carMsg.add(sessionId);
+                carMsg.add(customerId);
+                carMsg.add(msg.get(msg.size() - 3));
+                this.sendCommand(carHp, carMsg);
+            }
             
             // Book hotel
-            ArrayList<String> hotelMsg = new ArrayList<String>();
-            hotelMsg.add("reserveroom");
-            hotelMsg.add(sessionId);
-            hotelMsg.add(customerId);
-            hotelMsg.add(msg.get(msg.size() - 3));
-            hotelMsg.add(msg.get(msg.size() - 1));
-            this.sendCommand(hotelHp, hotelMsg);
+            if (!msg.get(msg.size() - 1).equals("0")) {
+                ArrayList<String> hotelMsg = new ArrayList<String>();
+                hotelMsg.add("reserveroom");
+                hotelMsg.add(sessionId);
+                hotelMsg.add(customerId);
+                hotelMsg.add(msg.get(msg.size() - 3));
+                this.sendCommand(hotelHp, hotelMsg);
+            }
             
             Result res = new Result();
             res.boolResult = true;
@@ -187,6 +202,47 @@ class BackendDispatcher implements Callable<Result> {
         }
         
         return sendCommand(hp, this.msg);
+    }
+
+    private void cancelProcessedCommands(ArrayList<ReservedItem> processedCommands, String customerId) {
+        HostPort flightHp = backends.get("flight");
+        HostPort carHp = backends.get("car");
+        HostPort hotelHp = backends.get("hotel");
+        HostPort customerHp = backends.get("customer");
+        
+        
+        for (ReservedItem ri: processedCommands) {
+            if (ri.getKey().startsWith("flight")) {
+                ArrayList<String> msg = new ArrayList<String>();
+                msg.add("cancelflight");
+                msg.add("1");
+                msg.add(ri.getKey());
+                msg.add(ri.getCount() + "");
+                sendCommand(flightHp, msg);
+            }
+            else if (ri.getKey().startsWith("car")) {
+                ArrayList<String> msg = new ArrayList<String>();
+                msg.add("cancelcar");
+                msg.add("1");
+                msg.add(ri.getKey());
+                msg.add(ri.getCount() + "");
+                sendCommand(carHp, msg);
+            }
+            else if (ri.getKey().startsWith("room")) {
+                ArrayList<String> msg = new ArrayList<String>();
+                msg.add("cancelroom");
+                msg.add("1");
+                msg.add(ri.getKey());
+                msg.add(ri.getCount() + "");
+                sendCommand(hotelHp, msg);
+            } 
+            ArrayList<String> customerMsg = new ArrayList<String>();
+            customerMsg.add("cancelcustomer");
+            customerMsg.add("1");
+            customerMsg.add(customerId);
+            customerMsg.add(ri.getKey());
+            sendCommand(customerHp, customerMsg);
+        }
     }
 
     private Result sendCommand(HostPort hp, ArrayList<String> msg) {

@@ -61,7 +61,7 @@ public class CustomerManagerImpl {
 
                     try {
                         ArrayList<String> msg = (ArrayList<String>) Comm.recvObject(connection);
-
+                        
                         if (msg.get(0).equalsIgnoreCase("newcustomer")) {
                             if (msg.size() == 3) {
                                 res.boolResult = copy.newCustomer(
@@ -95,6 +95,18 @@ public class CustomerManagerImpl {
                             else
                                 res.stringResult = queryResult;
                         }
+                        else if (msg.get(0).equalsIgnoreCase("cancelcustomer")) {
+                            Customer cust = (Customer)copy.customerTable.get("customer-" + msg.get(2));
+                            System.out.println(cust);
+                            System.out.flush();
+                            if (cust != null) {
+                                cust.cancelReservation(msg.get(3));
+                                res.boolResult = true;
+                            }
+                            else {
+                                res.boolResult = false;
+                            }
+                        }
                         // Not an actual client command, just used for message passing.
                         else if (msg.get(0).equalsIgnoreCase("reservation")) {
                             Customer cust = copy.getCustomer(Integer.parseInt(msg.get(1)));
@@ -113,16 +125,9 @@ public class CustomerManagerImpl {
                         Comm.sendObject(connection, res);
                         connection.close();
                     }
-                    catch (NumberFormatException e) {
+                    catch (Exception e) {
                         res.boolResult = false;
                         Comm.sendObject(connection, res);
-                    }
-                    catch (RemoteException e) {
-                        res.boolResult = false;
-                        Comm.sendObject(connection, res);
-                    }
-                    catch (IOException e) {
-                        e.printStackTrace();
                     }
                 }
             });

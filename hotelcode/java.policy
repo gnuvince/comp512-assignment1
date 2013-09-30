@@ -1,3 +1,3 @@
-grant codeBase "file:/home/2013/vfoley1/Documents/comp512/comp512-assignment1/hotelcode" {
+grant codeBase "file:/home/vince/Dropbox/universite/A13/comp512/assignment1/hotelcode" {
     permission java.security.AllPermission;
 };
