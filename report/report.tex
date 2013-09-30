@@ -270,5 +270,17 @@ To satisfy the Java type system, a new serializable class, {\it
 executing a command, the result is wrapped into a result and sent back
 to the middleware.
 
+\subsection{Error handling}
+
+Commands are not validated on the client side before being sent to the
+middleware and dispatched to the appropriate resource manager.  If an
+exception occurs in the resource manager (e.g. the string for the
+customer id is not a string representing a valid integer), the
+exception is caught and a result containing false is sent back to the
+client.  In an industrial system, we would probably prefer to validate
+on the client that the command is well-formed, as well as return a
+proper error code from the resource manager (in case someone manages
+to bypass the client validation).
+
 
 \end{document}
