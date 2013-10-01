@@ -2,7 +2,6 @@
 *.jar
 *~
 */bin/
-*.pdf
 *.aux
 *.dvi
 *.log
