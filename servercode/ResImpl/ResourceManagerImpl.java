@@ -430,19 +430,13 @@ public class ResourceManagerImpl implements ResourceManager {
                                               
                 System.out.println("Cancelling reservation: " + reserveditem.getKey());
                 String itemType = reserveditem.getKey().split("\\-")[0];     
-                switch (itemType) {
-			       case "room": 
-			    	   rmHotel.cancelItem(id, reserveditem.getKey(), reserveditem.getCount());
-			            break;
-			       case "car":
-			    	   rmCar.cancelItem(id, reserveditem.getKey(), reserveditem.getCount());			       		
-			                break;
-			       case "flight":
-			    	   rmFlight.cancelItem(id, reserveditem.getKey(), reserveditem.getCount());
-			                break;
-			       default: Trace.warn("The reservation doesn't have a valid format. Operation cancelled");
-                break;
-                }
+                if (itemType.equals("room")) {
+                	rmHotel.cancelItem(id, reserveditem.getKey(), reserveditem.getCount());
+                } else if (itemType.equals("car")) {
+                	rmCar.cancelItem(id, reserveditem.getKey(), reserveditem.getCount());
+                } else if (itemType.equals("flight")) {
+                	rmFlight.cancelItem(id, reserveditem.getKey(), reserveditem.getCount());
+                }                
                 
             }
 
@@ -525,15 +519,13 @@ public class ResourceManagerImpl implements ResourceManager {
     	if (cust == null){
     		return false;
     	}
-    	
-    	System.out.println("Client validated");
-    	
+    	    	
     	ArrayList<String> reservedItems = new ArrayList<String>();
     	    
     	boolean result = false;
     	
     	for (int i = 0; i < flightNumbers.size(); i++) {
-    		int flightNumber = (int)flightNumbers.get(i);
+    		int flightNumber = (Integer)flightNumbers.get(i);
     		    	
     		result = reserveFlight(1, customer, flightNumber);    		
     		
